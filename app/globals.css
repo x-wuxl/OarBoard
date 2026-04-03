@@ -1,0 +1,168 @@
+@import 'tailwindcss';
+
+:root {
+  color-scheme: dark;
+  --bg: #04131f;
+  --bg-soft: #0b2232;
+  --ink: #f4fbff;
+  --muted: rgba(226, 241, 248, 0.72);
+  --line: rgba(255, 255, 255, 0.08);
+  --glass: rgba(255, 255, 255, 0.08);
+  --rose: #ff5a7a;
+  --lime: #8dfc61;
+  --cyan: #4ed8ff;
+}
+
+@theme inline {
+  --color-oar-bg: var(--bg);
+  --color-oar-bg-soft: var(--bg-soft);
+  --color-oar-ink: var(--ink);
+  --color-oar-muted: var(--muted);
+  --color-oar-line: var(--line);
+  --color-oar-glass: var(--glass);
+  --color-oar-rose: var(--rose);
+  --color-oar-lime: var(--lime);
+  --color-oar-cyan: var(--cyan);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background:
+    radial-gradient(circle at top, rgba(78, 216, 255, 0.16), transparent 28%),
+    radial-gradient(circle at 20% 80%, rgba(255, 90, 122, 0.14), transparent 26%),
+    linear-gradient(180deg, #031019 0%, #071b28 48%, #020b12 100%);
+  color: var(--ink);
+  font-family: 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+a {
+  color: inherit;
+}
+
+.ring-poster {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.ring-poster::before {
+  content: '';
+  position: absolute;
+  width: 16rem;
+  height: 16rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02) 52%, transparent 74%);
+  filter: blur(8px);
+}
+
+.ring-svg {
+  width: min(56vw, 17rem);
+  height: auto;
+  transform: rotate(-90deg);
+}
+
+.ring-track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.08);
+}
+
+.ring-progress {
+  fill: none;
+  stroke-linecap: round;
+}
+
+.ring-progress.rose {
+  stroke: url(#ring-rose);
+  filter: drop-shadow(0 0 16px rgba(255, 90, 122, 0.45));
+}
+
+.ring-progress.lime {
+  stroke: url(#ring-lime);
+  filter: drop-shadow(0 0 16px rgba(141, 252, 97, 0.35));
+}
+
+.ring-progress.cyan {
+  stroke: url(#ring-cyan);
+  filter: drop-shadow(0 0 16px rgba(78, 216, 255, 0.35));
+}
+
+.ring-core {
+  position: absolute;
+  display: grid;
+  gap: 0.25rem;
+  text-align: center;
+}
+
+.ring-core-label {
+  color: var(--muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.ring-core-value {
+  font-size: clamp(1.8rem, 3.6vw, 2.6rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.ring-core-subtitle {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.ring-legend {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 1.4rem;
+}
+
+.ring-legend-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.ring-legend-dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 999px;
+}
+
+.ring-legend-dot.rose {
+  background: var(--rose);
+}
+
+.ring-legend-dot.lime {
+  background: var(--lime);
+}
+
+.ring-legend-dot.cyan {
+  background: var(--cyan);
+}
+
+.ring-legend-meta {
+  display: grid;
+  gap: 0.18rem;
+}
+
+.ring-legend-label {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.ring-legend-value {
+  font-weight: 700;
+}
