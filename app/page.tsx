@@ -7,7 +7,7 @@ import { getCachedWorkoutArtifacts, getTodayTotalsFromUpstream, toHeatmapEntries
 import { formatDistanceKm, formatDuration } from '../src/lib/moke/formatters';
 import { buildCalendarHeatmap, buildTrendCards } from '../src/lib/oarboard/calendar-data';
 import { buildDashboardData, buildWorkoutDetailPanel } from '../src/lib/oarboard/dashboard-data';
-import { buildPosterHeroData } from '../src/lib/oarboard/poster-data';
+import { buildTodayPosterHeroData } from '../src/lib/oarboard/poster-data';
 import type { MokeWorkoutTotalsResponse } from '../src/lib/moke/types';
 
 export const dynamic = 'force-dynamic';
@@ -77,8 +77,8 @@ export default async function HomePage() {
     totalDuration: 0,
     sportCount: 0,
   };
-  const recentRecords = summary ? toRecentHistoryRecords(summary) : [];
-  const latestRecord = recentRecords[0] ?? null;
+  const historyRecords = summary ? toRecentHistoryRecords(summary) : [];
+  const todayRecords = historyRecords.filter((record) => record.day === today);
 
   let todayTotals = emptyTotals;
 
@@ -93,20 +93,10 @@ export default async function HomePage() {
     }
   }
 
-  const hero = latestRecord
-    ? buildPosterHeroData(latestRecord)
-    : {
-        dateLabel: today,
-        primaryValue: '00:00:00',
-        averagePace: '--:--/500m',
-        averageRpm: '0.00',
-        totalTurns: '0',
-        calorie: { value: 0, goal: 200 },
-        duration: { value: 0, goal: 900 },
-        distance: { value: 0, goal: 3000 },
-      };
+  const hero = buildTodayPosterHeroData(todayRecords, today);
+  const hasWorkoutToday = (todayTotals.data.sportCount ?? 0) > 0 || todayRecords.length > 0;
 
-  const dashboard = buildDashboardData(recentRecords, summaryTotals);
+  const dashboard = buildDashboardData(historyRecords, summaryTotals);
   const fallbackDetail = {
     title: today,
     subtitle: 'No workout data',
@@ -117,12 +107,8 @@ export default async function HomePage() {
     chartPoints: [],
   };
   const detailsById = Object.fromEntries(
-    recentRecords.map((record) => [record._id, buildWorkoutDetailPanel(record)]),
+    historyRecords.map((record) => [record._id, buildWorkoutDetailPanel(record)]),
   );
-
-  if (latestRecord && !detailsById[latestRecord._id]) {
-    detailsById[latestRecord._id] = buildWorkoutDetailPanel(latestRecord);
-  }
 
   if (Object.keys(detailsById).length === 0) {
     detailsById.fallback = fallbackDetail;
@@ -180,9 +166,9 @@ export default async function HomePage() {
             averageRpm={hero.averageRpm}
             totalTurns={hero.totalTurns}
             duration={hero.primaryValue}
-            distance={latestRecord ? formatDistanceKm(latestRecord.sumMileage * 1000) : '0.00 km'}
-            calories={latestRecord ? `${Math.round(latestRecord.sumCalorie)} kcal` : '0 kcal'}
-            hasWorkout={!!latestRecord}
+            distance={formatDistanceKm(hero.distance.value)}
+            calories={`${Math.round(hero.calorie.value)} kcal`}
+            hasWorkout={hasWorkoutToday}
             ringData={{ calorie: hero.calorie, duration: hero.duration, distance: hero.distance }}
           >
             <FitnessRings
@@ -235,3 +221,4 @@ export default async function HomePage() {
     </main>
   );
 }
+

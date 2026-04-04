@@ -1,4 +1,4 @@
-import { buildRingMetrics, describeRingProgress } from '../lib/oarboard/rings';
+import { describeRingProgress } from '../lib/oarboard/rings';
 
 interface PosterHeroProps {
   averagePace: string;
@@ -27,7 +27,11 @@ export function PosterHero({
   ringData,
   children,
 }: PosterHeroProps) {
-  const metrics = buildRingMetrics(ringData);
+  const progressItems = [
+    { id: 'calorie', label: '热量目标', progress: ringData.calorie.value / ringData.calorie.goal, tone: 'bg-oar-rose' },
+    { id: 'duration', label: '时长目标', progress: ringData.duration.value / ringData.duration.goal, tone: 'bg-oar-lime' },
+    { id: 'distance', label: '距离目标', progress: ringData.distance.value / ringData.distance.goal, tone: 'bg-oar-cyan' },
+  ];
 
   return (
     <section className="py-8 lg:py-10">
@@ -66,29 +70,26 @@ export function PosterHero({
                 <div className="mt-3 grid grid-cols-3 gap-3">
                   <div className="rounded-[1rem] border border-white/5 bg-white/[0.02] px-3.5 py-2.5">
                     <div className="text-lg font-bold">{duration}</div>
-                    <div className="text-[0.66rem] text-oar-muted">时长</div>
+                    <div className="text-[0.66rem] text-oar-muted">今日时长</div>
                   </div>
                   <div className="rounded-[1rem] border border-white/5 bg-white/[0.02] px-3.5 py-2.5">
                     <div className="text-lg font-bold">{distance}</div>
-                    <div className="text-[0.66rem] text-oar-muted">距离</div>
+                    <div className="text-[0.66rem] text-oar-muted">今日距离</div>
                   </div>
                   <div className="rounded-[1rem] border border-white/5 bg-white/[0.02] px-3.5 py-2.5">
                     <div className="text-lg font-bold">{calories}</div>
-                    <div className="text-[0.66rem] text-oar-muted">消耗</div>
+                    <div className="text-[0.66rem] text-oar-muted">今日消耗</div>
                   </div>
                 </div>
               </div>
             </div>
 
             <div className="relative mt-6 grid gap-3 border-t border-white/8 pt-5 sm:grid-cols-3">
-              {metrics.map((metric) => (
-                <div key={metric.id} className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2.5">
-                  <span className={`h-2.5 w-2.5 rounded-full ${metric.tone === 'rose' ? 'bg-oar-rose' : metric.tone === 'lime' ? 'bg-oar-lime' : 'bg-oar-cyan'}`} />
-                  <div className="flex-1">
-                    <span className="text-[0.72rem] text-oar-muted">{metric.label}</span>
-                    <span className="ml-2 font-semibold text-[0.88rem]">{metric.value}</span>
-                  </div>
-                  <span className="text-[0.72rem] font-medium text-oar-muted">{describeRingProgress(metric.progress)}</span>
+              {progressItems.map((item) => (
+                <div key={item.id} className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2.5">
+                  <span className={`h-2.5 w-2.5 rounded-full ${item.tone}`} />
+                  <div className="flex-1 text-[0.72rem] text-oar-muted">{item.label}</div>
+                  <span className="text-[0.72rem] font-medium text-oar-muted">{describeRingProgress(item.progress)}</span>
                 </div>
               ))}
             </div>

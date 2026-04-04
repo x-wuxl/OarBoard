@@ -130,10 +130,9 @@ function buildSummaryFile(accountId: string, months: CachedMonthFile[]): CachedS
     { totalDistance: 0, totalCalorie: 0, totalDuration: 0, sportCount: 0 },
   );
 
-  const recentRecords = sortedMonths
+  const allRecords = sortedMonths
     .flatMap((month) => month.records)
-    .sort((a, b) => b.startTime.localeCompare(a.startTime))
-    .slice(0, 20);
+    .sort((a, b) => b.startTime.localeCompare(a.startTime));
 
   return {
     accountId,
@@ -146,7 +145,7 @@ function buildSummaryFile(accountId: string, months: CachedMonthFile[]): CachedS
       duration: month.monthlySummary.duration,
       sportCount: month.monthlySummary.sportCount,
     })),
-    recentRecords,
+    recentRecords: allRecords,
   };
 }
 
