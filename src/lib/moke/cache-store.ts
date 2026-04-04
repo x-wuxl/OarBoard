@@ -168,9 +168,7 @@ function buildIndexFile(accountId: string, months: CachedMonthFile[]): CachedInd
   };
 }
 
-export async function writeWorkoutCache(accountId: string, records: MokeWorkoutRecord[]) {
-  await ensureAccountCacheDir(accountId);
-
+export function buildWorkoutCacheArtifacts(accountId: string, records: MokeWorkoutRecord[]) {
   const byMonth = records.reduce<Record<string, MokeWorkoutRecord[]>>((acc, record) => {
     const key = record.month;
     acc[key] ??= [];
@@ -182,13 +180,27 @@ export async function writeWorkoutCache(accountId: string, records: MokeWorkoutR
     .map(([month, monthRecords]) => buildMonthFile(accountId, month, monthRecords))
     .sort((a, b) => b.month.localeCompare(a.month));
 
-  for (const monthFile of monthFiles) {
+  return {
+    monthFiles,
+    summary: buildSummaryFile(accountId, monthFiles),
+    heatmap: buildHeatmapFile(accountId, monthFiles),
+    index: buildIndexFile(accountId, monthFiles),
+  };
+}
+
+export async function writeWorkoutCache(accountId: string, records: MokeWorkoutRecord[]) {
+  const artifacts = buildWorkoutCacheArtifacts(accountId, records);
+  await ensureAccountCacheDir(accountId);
+
+  for (const monthFile of artifacts.monthFiles) {
     await writeJsonFile(getMonthPath(accountId, monthFile.month), monthFile);
   }
 
-  await writeJsonFile(getSummaryPath(accountId), buildSummaryFile(accountId, monthFiles));
-  await writeJsonFile(getHeatmapPath(accountId), buildHeatmapFile(accountId, monthFiles));
-  await writeJsonFile(getIndexPath(accountId), buildIndexFile(accountId, monthFiles));
+  await writeJsonFile(getSummaryPath(accountId), artifacts.summary);
+  await writeJsonFile(getHeatmapPath(accountId), artifacts.heatmap);
+  await writeJsonFile(getIndexPath(accountId), artifacts.index);
+
+  return artifacts;
 }
 
 export async function readWorkoutSummaryCache(accountId: string) {

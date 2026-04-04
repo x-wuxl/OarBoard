@@ -1,5 +1,5 @@
 import type { CachedHeatmapFile, CachedSummaryFile } from './cache-types';
-import { readWorkoutHeatmapCache, readWorkoutSummaryCache, writeWorkoutCache } from './cache-store';
+import { buildWorkoutCacheArtifacts, readWorkoutHeatmapCache, readWorkoutSummaryCache, writeWorkoutCache } from './cache-store';
 import { fetchWorkoutList, fetchWorkoutTotals, flattenWorkoutGroups } from './service';
 import type { MokeWorkoutRecord } from './types';
 
@@ -41,17 +41,15 @@ export async function getCachedWorkoutArtifacts(input: {
     }, requestOptions)),
   );
 
-  const records = monthLists.flatMap((response) => flattenWorkoutGroups(response));
-  await writeWorkoutCache(input.accountId, dedupeRecords(records));
+  const records = dedupeRecords(monthLists.flatMap((response) => flattenWorkoutGroups(response)));
 
-  const refreshedSummary = await readWorkoutSummaryCache(input.accountId);
-  const refreshedHeatmap = await readWorkoutHeatmapCache(input.accountId);
-
-  if (!refreshedSummary || !refreshedHeatmap) {
-    throw new Error('Failed to build workout cache artifacts');
+  try {
+    const artifacts = await writeWorkoutCache(input.accountId, records);
+    return { summary: artifacts.summary, heatmap: artifacts.heatmap, source: 'upstream' as const };
+  } catch {
+    const artifacts = buildWorkoutCacheArtifacts(input.accountId, records);
+    return { summary: artifacts.summary, heatmap: artifacts.heatmap, source: 'upstream' as const };
   }
-
-  return { summary: refreshedSummary, heatmap: refreshedHeatmap, source: 'upstream' as const };
 }
 
 export async function getTodayTotalsFromUpstream(input: {
