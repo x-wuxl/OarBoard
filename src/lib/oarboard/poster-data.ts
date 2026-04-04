@@ -2,6 +2,12 @@ import { formatDuration, formatPacePer500m } from '../moke/formatters';
 import { buildDetailMetrics } from '../moke/service';
 import type { MokeWorkoutRecord } from '../moke/types';
 
+const HERO_GOALS = {
+  calorie: 200,
+  duration: 720,
+  distance: 3000,
+} as const;
+
 export interface PosterHeroData {
   dateLabel: string;
   primaryValue: string;
@@ -22,9 +28,9 @@ export function buildPosterHeroData(record: MokeWorkoutRecord): PosterHeroData {
     averagePace: metrics.averagePace,
     averageRpm: metrics.averageRpm.toFixed(2),
     totalTurns: String(metrics.totalTurns),
-    calorie: { value: record.sumCalorie, goal: 200 },
-    duration: { value: record.sumDuration, goal: 900 },
-    distance: { value: Math.round(record.sumMileage * 1000), goal: 3000 },
+    calorie: { value: record.sumCalorie, goal: HERO_GOALS.calorie },
+    duration: { value: record.sumDuration, goal: HERO_GOALS.duration },
+    distance: { value: Math.round(record.sumMileage * 1000), goal: HERO_GOALS.distance },
   };
 }
 
@@ -36,9 +42,9 @@ export function buildTodayPosterHeroData(records: MokeWorkoutRecord[], today: st
       averagePace: '--:--/500m',
       averageRpm: '0.00',
       totalTurns: '0',
-      calorie: { value: 0, goal: 200 },
-      duration: { value: 0, goal: 900 },
-      distance: { value: 0, goal: 3000 },
+      calorie: { value: 0, goal: HERO_GOALS.calorie },
+      duration: { value: 0, goal: HERO_GOALS.duration },
+      distance: { value: 0, goal: HERO_GOALS.distance },
     };
   }
 
@@ -47,8 +53,9 @@ export function buildTodayPosterHeroData(records: MokeWorkoutRecord[], today: st
   const totalDistanceMeters = records.reduce((sum, record) => sum + Math.round(record.sumMileage * 1000), 0);
   const totalTurns = records.reduce((sum, record) => sum + (Number(record.turns) || 0), 0);
 
-  const speedValues = records.flatMap((record) => buildDetailMetrics(record).averageSpeed > 0 ? [buildDetailMetrics(record).averageSpeed] : []);
-  const rpmValues = records.flatMap((record) => buildDetailMetrics(record).averageRpm > 0 ? [buildDetailMetrics(record).averageRpm] : []);
+  const detailMetrics = records.map((record) => buildDetailMetrics(record));
+  const speedValues = detailMetrics.flatMap((metrics) => (metrics.averageSpeed > 0 ? [metrics.averageSpeed] : []));
+  const rpmValues = detailMetrics.flatMap((metrics) => (metrics.averageRpm > 0 ? [metrics.averageRpm] : []));
   const averageSpeed = speedValues.length > 0
     ? speedValues.reduce((sum, value) => sum + value, 0) / speedValues.length
     : 0;
@@ -62,8 +69,8 @@ export function buildTodayPosterHeroData(records: MokeWorkoutRecord[], today: st
     averagePace: averageSpeed > 0 ? formatPacePer500m(averageSpeed) : '--:--/500m',
     averageRpm: averageRpm.toFixed(2),
     totalTurns: String(totalTurns),
-    calorie: { value: totalCalorie, goal: 200 },
-    duration: { value: totalDuration, goal: 900 },
-    distance: { value: totalDistanceMeters, goal: 3000 },
+    calorie: { value: totalCalorie, goal: HERO_GOALS.calorie },
+    duration: { value: totalDuration, goal: HERO_GOALS.duration },
+    distance: { value: totalDistanceMeters, goal: HERO_GOALS.distance },
   };
 }

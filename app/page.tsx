@@ -42,7 +42,6 @@ export default async function HomePage() {
 
   const today = getToday();
   const currentMonth = getCurrentMonth();
-  const currentWeekRange = getCurrentWeekRange();
 
   let authError: string | null = null;
 
@@ -57,14 +56,12 @@ export default async function HomePage() {
 
   let summary = null;
   let heatmapArtifact = null;
-  let cacheSource: 'cache' | 'upstream' | 'empty' = 'empty';
 
   if (accountId) {
     try {
       const cached = await getCachedWorkoutArtifacts({ accountId, authorization, baseUrl });
       summary = cached.summary;
       heatmapArtifact = cached.heatmap;
-      cacheSource = cached.source;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       authError = message.includes('401') ? 'MOKE_AUTHORIZATION may be expired. Update your token in the environment variables.' : message;
@@ -185,12 +182,7 @@ export default async function HomePage() {
             </div>
           ) : null}
 
-          {cacheSource !== 'empty' ? (
-            <div className="mt-4 text-xs tracking-[0.08em] text-oar-muted">
-              数据来源: {cacheSource === 'cache' ? '本地缓存' : '上游同步'}
-              <span className="ml-3">周期: {currentWeekRange}</span>
-            </div>
-          ) : null}
+
 
           <LifetimeStats
             totalDuration={lifetimeDuration}
@@ -221,4 +213,5 @@ export default async function HomePage() {
     </main>
   );
 }
+
 
