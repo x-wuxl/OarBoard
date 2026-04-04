@@ -1,6 +1,8 @@
 const DEFAULT_BASE_URL = process.env.MOKE_BASE_URL ?? 'http://data.mokfitness.cn';
 const API_PREFIX = '/mokfitness/new/api';
 
+import { getMokeRequestPolicy } from './request-policy';
+
 export interface MokeClientOptions {
   baseUrl?: string;
   authorization?: string;
@@ -12,6 +14,7 @@ export class MokeApiError extends Error {
     message: string,
     public readonly status?: number,
     public readonly payload?: unknown,
+    public readonly code?: 'timeout' | 'unauthorized' | 'upstream',
   ) {
     super(message);
     this.name = 'MokeApiError';
@@ -38,25 +41,49 @@ export class MokeClient {
       }
     }
 
-    const response = await this.fetchImpl(url, {
-      method: 'GET',
-      headers: {
-        ...(this.authorization ? { authorization: this.authorization } : {}),
-      },
-      cache: 'no-store',
-    });
+    const policy = getMokeRequestPolicy(path);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), policy.timeoutMs);
 
-    const payload = await response.json().catch(() => null);
+    try {
+      const response = await this.fetchImpl(url, {
+        method: 'GET',
+        headers: {
+          ...(this.authorization ? { authorization: this.authorization } : {}),
+        },
+        cache: policy.nextRevalidate ? 'force-cache' : 'no-store',
+        ...(policy.nextRevalidate ? { next: { revalidate: policy.nextRevalidate } } : {}),
+        signal: controller.signal,
+      });
 
-    if (!response.ok) {
-      throw new MokeApiError(`Moke API request failed with status ${response.status}`, response.status, payload);
+      const payload = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new MokeApiError(
+          `Moke API request failed with status ${response.status}`,
+          response.status,
+          payload,
+          response.status === 401 || response.status === 403 ? 'unauthorized' : 'upstream',
+        );
+      }
+
+      return payload as T;
+    } catch (error) {
+      if (error instanceof MokeApiError) {
+        throw error;
+      }
+
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new MokeApiError('Moke API request timed out', 504, null, 'timeout');
+      }
+
+      throw new MokeApiError('Moke API request failed', 502, error, 'upstream');
+    } finally {
+      clearTimeout(timeout);
     }
-
-    return payload as T;
   }
 }
 
 export function createMokeClient(options?: MokeClientOptions): MokeClient {
   return new MokeClient(options);
 }
-

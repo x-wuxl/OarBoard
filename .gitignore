@@ -1,6 +1,7 @@
 node_modules/
 .next/
 dist/
+.cache/
 
 .env
 .env.local
@@ -14,7 +15,6 @@ dist/
 *.log
 *.tmp
 *.temp
-
 
 coverage/
 vitest-report/

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { getMockResponseForPath, normalizeProxyPath } from '../../../../src/lib/moke/mock-data';
-import { buildProxyHeaders, buildUpstreamUrl, shouldUseMockData } from '../../../../src/lib/moke/proxy';
+import { buildProxyErrorResponse, buildProxyFetchOptions, buildProxyHeaders, buildUpstreamUrl, shouldUseMockData } from '../../../../src/lib/moke/proxy';
 
 const BASE_URL = process.env.MOKE_BASE_URL ?? 'http://data.mokfitness.cn';
 
@@ -30,23 +30,39 @@ async function handleProxy(request: NextRequest, context: { params: Promise<{ pa
   const contentType = request.headers.get('content-type') ?? undefined;
   const headers = buildProxyHeaders({ authorization, contentType });
   const body = request.method === 'GET' || request.method === 'HEAD' ? undefined : await request.text();
-
-  const upstreamResponse = await fetch(upstreamUrl, {
+  const options = buildProxyFetchOptions(path.join('/'), {
     method: request.method,
     headers,
     body,
-    cache: 'no-store',
   });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), options.timeoutMs);
 
-  const responseText = await upstreamResponse.text();
-  const responseType = upstreamResponse.headers.get('content-type') ?? 'application/json; charset=utf-8';
+  try {
+    const upstreamResponse = await fetch(upstreamUrl, {
+      method: options.method,
+      headers: options.headers,
+      body: options.body,
+      cache: options.cache,
+      ...(options.next ? { next: options.next } : {}),
+      signal: controller.signal,
+    });
 
-  return new NextResponse(responseText, {
-    status: upstreamResponse.status,
-    headers: {
-      'content-type': responseType,
-    },
-  });
+    const responseText = await upstreamResponse.text();
+    const responseType = upstreamResponse.headers.get('content-type') ?? 'application/json; charset=utf-8';
+
+    return new NextResponse(responseText, {
+      status: upstreamResponse.status,
+      headers: {
+        'content-type': responseType,
+      },
+    });
+  } catch (error) {
+    const response = buildProxyErrorResponse(error);
+    return NextResponse.json(response.body, { status: response.status });
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 export async function GET(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
@@ -68,4 +84,3 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ p
 export async function DELETE(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
   return handleProxy(request, context);
 }
-

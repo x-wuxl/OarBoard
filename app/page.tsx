@@ -3,12 +3,12 @@ import { DashboardSection } from '../src/components/dashboard-section';
 import { FitnessRings } from '../src/components/fitness-rings';
 import { LifetimeStats } from '../src/components/lifetime-stats';
 import { PosterHero } from '../src/components/poster-hero';
+import { getCachedWorkoutArtifacts, getTodayTotalsFromUpstream, toHeatmapEntries, toRecentHistoryRecords } from '../src/lib/moke/cache-service';
 import { formatDistanceKm, formatDuration } from '../src/lib/moke/formatters';
-import { fetchWorkoutHistory, fetchWorkoutList, fetchWorkoutTotals, flattenWorkoutGroups } from '../src/lib/moke/service';
 import { buildCalendarHeatmap, buildTrendCards } from '../src/lib/oarboard/calendar-data';
 import { buildDashboardData, buildWorkoutDetailPanel } from '../src/lib/oarboard/dashboard-data';
 import { buildPosterHeroData } from '../src/lib/oarboard/poster-data';
-import type { MokeWorkoutHistoryResponse, MokeWorkoutListResponse, MokeWorkoutTotalsResponse } from '../src/lib/moke/types';
+import type { MokeWorkoutTotalsResponse } from '../src/lib/moke/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,153 +35,64 @@ function getCurrentWeekRange(): string {
   return `${fmtDate(start)}/${fmtDate(end)}`;
 }
 
-function getLifetimeRange(): string {
-  return `2020-01-01/${fmtDate(new Date())}`;
-}
-
-function getRecentMonths(count: number): string[] {
-  const months: string[] = [];
-  const now = new Date();
-  for (let i = 0; i < count; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
-  }
-  return months;
-}
-
-async function fetchDailyHistoryPages(requestOptions: { authorization?: string }, maxPages = 50) {
-  const entries: MokeWorkoutHistoryResponse['data'] = [];
-
-  for (let page = 1; page <= maxPages; page += 1) {
-    const response = await fetchWorkoutHistory({ page, type: 1, deviceType: 2 }, requestOptions);
-    const pageData = response.data ?? [];
-
-    if (pageData.length === 0) {
-      break;
-    }
-
-    entries.push(...pageData);
-  }
-
-  return entries;
-}
-
 export default async function HomePage() {
   const accountId = process.env.MOKE_ACCOUNT_ID;
-  const requestOptions = {
-    authorization: process.env.MOKE_AUTHORIZATION,
-    baseUrl: process.env.MOKE_BASE_URL,
-  };
+  const authorization = process.env.MOKE_AUTHORIZATION;
+  const baseUrl = process.env.MOKE_BASE_URL;
 
   const today = getToday();
   const currentMonth = getCurrentMonth();
   const currentWeekRange = getCurrentWeekRange();
-  const lifetimeRange = getLifetimeRange();
-  const recentMonths = getRecentMonths(12);
 
   let authError: string | null = null;
-  const emptyList: MokeWorkoutListResponse = { code: 200, data: [] };
+
+  if (authorization && !accountId) {
+    authError = 'MOKE_ACCOUNT_ID is missing. Add it to your environment variables before deploying.';
+  }
+
   const emptyTotals: MokeWorkoutTotalsResponse = {
     code: 200,
     data: { totalDistance: 0, totalCalorie: 0, totalDuration: 0, sportCount: 0 },
   };
-  const emptyHistory: MokeWorkoutHistoryResponse = { code: 200, data: [] };
 
-  if (requestOptions.authorization && !accountId) {
-    authError = 'MOKE_ACCOUNT_ID is missing. Add it to your environment variables before deploying.';
+  let summary = null;
+  let heatmapArtifact = null;
+  let cacheSource: 'cache' | 'upstream' | 'empty' = 'empty';
+
+  if (accountId) {
+    try {
+      const cached = await getCachedWorkoutArtifacts({ accountId, authorization, baseUrl });
+      summary = cached.summary;
+      heatmapArtifact = cached.heatmap;
+      cacheSource = cached.source;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      authError = message.includes('401') ? 'MOKE_AUTHORIZATION may be expired. Update your token in the environment variables.' : message;
+    }
   }
 
-  const settled = accountId
-    ? await Promise.allSettled([
-        fetchWorkoutList({
-          accountId,
-          page: 1,
-          type: 1,
-          deviceType: 2,
-          condition: today,
-        }, requestOptions),
-        fetchWorkoutTotals({
-          accountId,
-          type: 1,
-          deviceType: 2,
-          condition: today,
-        }, requestOptions),
-        ...recentMonths.map((month) =>
-          fetchWorkoutList({
-            accountId,
-            page: 1,
-            type: 3,
-            deviceType: 2,
-            condition: month,
-          }, requestOptions),
-        ),
-        fetchDailyHistoryPages(requestOptions),
-        fetchWorkoutTotals({
-          accountId,
-          type: 2,
-          deviceType: 2,
-          condition: currentWeekRange,
-        }, requestOptions),
-        fetchWorkoutTotals({
-          accountId,
-          type: 3,
-          deviceType: 2,
-          condition: currentMonth,
-        }, requestOptions),
-        fetchWorkoutTotals({
-          accountId,
-          type: 3,
-          deviceType: 2,
-          condition: `${new Date().getFullYear()}-01`,
-        }, requestOptions),
-        fetchWorkoutTotals({
-          accountId,
-          type: 2,
-          deviceType: 2,
-          condition: lifetimeRange,
-        }, requestOptions),
-      ])
-    : await Promise.allSettled([
-        Promise.resolve(emptyList),
-        Promise.resolve(emptyTotals),
-        ...recentMonths.map(() => Promise.resolve(emptyList)),
-        Promise.resolve(emptyHistory.data),
-        Promise.resolve(emptyTotals),
-        Promise.resolve(emptyTotals),
-        Promise.resolve(emptyTotals),
-        Promise.resolve(emptyTotals),
-      ]);
-
-  const firstFailure = settled.find((result) => result.status === 'rejected');
-  if (firstFailure?.status === 'rejected') {
-    const message = firstFailure.reason instanceof Error ? firstFailure.reason.message : String(firstFailure.reason);
-    authError = message.includes('401') ? 'MOKE_AUTHORIZATION may be expired. Update your token in the environment variables.' : message;
-  }
-
-  const workoutList = settled[0].status === 'fulfilled' ? settled[0].value : emptyList;
-  const workoutTotals = settled[1].status === 'fulfilled' ? settled[1].value : emptyTotals;
-
-  const historyLists = recentMonths.map((_, i) => {
-    const idx = 2 + i;
-    return settled[idx].status === 'fulfilled' ? settled[idx].value as MokeWorkoutListResponse : emptyList;
-  });
-
-  const baseIdx = 2 + recentMonths.length;
-  const val = <T,>(idx: number, fallback: T): T => {
-    const r = settled[idx];
-    return r.status === 'fulfilled' ? r.value as T : fallback;
+  const summaryTotals = summary?.totals ?? {
+    totalDistance: 0,
+    totalCalorie: 0,
+    totalDuration: 0,
+    sportCount: 0,
   };
-  const dayHistory = val<MokeWorkoutHistoryResponse['data']>(baseIdx, emptyHistory.data);
-  const weekTotals = val<MokeWorkoutTotalsResponse>(baseIdx + 1, emptyTotals);
-  const monthTotals = val<MokeWorkoutTotalsResponse>(baseIdx + 2, emptyTotals);
-  const yearTotals = val<MokeWorkoutTotalsResponse>(baseIdx + 3, emptyTotals);
-  const lifetimeTotals = val<MokeWorkoutTotalsResponse>(baseIdx + 4, emptyTotals);
+  const recentRecords = summary ? toRecentHistoryRecords(summary) : [];
+  const latestRecord = recentRecords[0] ?? null;
 
-  const records = flattenWorkoutGroups(workoutList);
-  const historyRecords = historyLists.flatMap((list) => flattenWorkoutGroups(list));
-  const uniqueHistory = [...new Map(historyRecords.map((r) => [r._id, r])).values()]
-    .sort((a, b) => b.startTime.localeCompare(a.startTime));
-  const [latestRecord] = records;
+  let todayTotals = emptyTotals;
+
+  if (accountId) {
+    try {
+      todayTotals = await getTodayTotalsFromUpstream({ accountId, authorization, baseUrl, today });
+    } catch (error) {
+      if (!authError) {
+        const message = error instanceof Error ? error.message : String(error);
+        authError = message.includes('401') ? 'MOKE_AUTHORIZATION may be expired. Update your token in the environment variables.' : message;
+      }
+    }
+  }
+
   const hero = latestRecord
     ? buildPosterHeroData(latestRecord)
     : {
@@ -195,7 +106,7 @@ export default async function HomePage() {
         distance: { value: 0, goal: 3000 },
       };
 
-  const dashboard = buildDashboardData(uniqueHistory, workoutTotals.data);
+  const dashboard = buildDashboardData(recentRecords, summaryTotals);
   const fallbackDetail = {
     title: today,
     subtitle: 'No workout data',
@@ -206,7 +117,7 @@ export default async function HomePage() {
     chartPoints: [],
   };
   const detailsById = Object.fromEntries(
-    uniqueHistory.map((record) => [record._id, buildWorkoutDetailPanel(record)]),
+    recentRecords.map((record) => [record._id, buildWorkoutDetailPanel(record)]),
   );
 
   if (latestRecord && !detailsById[latestRecord._id]) {
@@ -214,19 +125,40 @@ export default async function HomePage() {
   }
 
   if (Object.keys(detailsById).length === 0) {
-    detailsById['fallback'] = fallbackDetail;
+    detailsById.fallback = fallbackDetail;
   }
 
-  const heatmap = buildCalendarHeatmap(dayHistory ?? []);
-  const weekCards = buildTrendCards(weekTotals.data);
-  const monthCards = buildTrendCards(monthTotals.data);
-  const yearCards = buildTrendCards(yearTotals.data);
+  const heatmap = buildCalendarHeatmap(heatmapArtifact ? toHeatmapEntries(heatmapArtifact) : []);
+  const recentMonths = summary?.recentMonths ?? [];
+  const currentMonthSummary = recentMonths.find((month) => month.month === currentMonth);
+  const currentYearSummary = recentMonths
+    .filter((month) => month.month.startsWith(`${new Date().getFullYear()}-`))
+    .reduce(
+      (acc, month) => {
+        acc.totalDistance += month.distance;
+        acc.totalCalorie += month.calorie;
+        acc.totalDuration += month.duration;
+        acc.sportCount += month.sportCount;
+        return acc;
+      },
+      { totalDistance: 0, totalCalorie: 0, totalDuration: 0, sportCount: 0 },
+    );
 
-  const lt = lifetimeTotals.data;
-  const lifetimeDuration = formatDuration(lt.totalDuration);
-  const lifetimeCalories = `${Math.round(lt.totalCalorie)} kcal`;
-  const lifetimeDistance = formatDistanceKm(lt.totalDistance * 1000);
-  const lifetimeSportCount = lt.sportCount ?? 0;
+  const weekCards = buildTrendCards(todayTotals.data);
+  const monthCards = buildTrendCards(currentMonthSummary
+    ? {
+        totalDistance: currentMonthSummary.distance,
+        totalCalorie: currentMonthSummary.calorie,
+        totalDuration: currentMonthSummary.duration,
+        sportCount: currentMonthSummary.sportCount,
+      }
+    : emptyTotals.data);
+  const yearCards = buildTrendCards(currentYearSummary);
+
+  const lifetimeDuration = formatDuration(summaryTotals.totalDuration);
+  const lifetimeCalories = `${Math.round(summaryTotals.totalCalorie)} kcal`;
+  const lifetimeDistance = formatDistanceKm(summaryTotals.totalDistance * 1000);
+  const lifetimeSportCount = summaryTotals.sportCount ?? 0;
 
   return (
     <main className="relative min-h-screen">
@@ -267,6 +199,13 @@ export default async function HomePage() {
             </div>
           ) : null}
 
+          {cacheSource !== 'empty' ? (
+            <div className="mt-4 text-xs tracking-[0.08em] text-oar-muted">
+              数据来源: {cacheSource === 'cache' ? '本地缓存' : '上游同步'}
+              <span className="ml-3">周期: {currentWeekRange}</span>
+            </div>
+          ) : null}
+
           <LifetimeStats
             totalDuration={lifetimeDuration}
             totalCalories={lifetimeCalories}
@@ -296,4 +235,3 @@ export default async function HomePage() {
     </main>
   );
 }
-

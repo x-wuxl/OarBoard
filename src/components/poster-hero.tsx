@@ -1,7 +1,3 @@
-'use client';
-
-import { motion } from 'framer-motion';
-
 import { buildRingMetrics, describeRingProgress } from '../lib/oarboard/rings';
 
 interface PosterHeroProps {
@@ -20,11 +16,6 @@ interface PosterHeroProps {
   children: React.ReactNode;
 }
 
-const heroTransition = {
-  duration: 0.8,
-  ease: [0.16, 1, 0.3, 1] as const,
-};
-
 export function PosterHero({
   averagePace,
   averageRpm,
@@ -40,12 +31,7 @@ export function PosterHero({
 
   return (
     <section className="py-8 lg:py-10">
-      <motion.div
-        className="relative overflow-hidden rounded-[2.2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.10),rgba(255,255,255,0.035))] p-6 shadow-[0_30px_120px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.14)] backdrop-blur-[30px] lg:p-8"
-        initial={{ opacity: 0, scale: 0.97 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
-      >
+      <div className="relative overflow-hidden rounded-[2.2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.10),rgba(255,255,255,0.035))] p-6 shadow-[0_30px_120px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.14)] backdrop-blur-[30px] lg:p-8">
         <div className="pointer-events-none absolute inset-x-10 top-0 h-28 rounded-full bg-cyan-300/10 blur-3xl" />
         <div className="pointer-events-none absolute right-0 top-14 h-36 w-36 rounded-full bg-rose-400/10 blur-3xl" />
 
@@ -119,7 +105,7 @@ export function PosterHero({
             </div>
           </div>
         )}
-      </motion.div>
+      </div>
     </section>
   );
 }
