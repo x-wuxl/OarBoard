@@ -11,6 +11,7 @@ dist/
 
 .claude/
 .superpowers/
+.worktrees/
 
 *.log
 *.tmp
