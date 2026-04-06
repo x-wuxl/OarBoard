@@ -2,12 +2,12 @@
 
 :root {
   color-scheme: dark;
-  --bg: #04131f;
-  --bg-soft: #0b2232;
+  --bg: #030f18;
+  --bg-soft: #091a28;
   --ink: #f4fbff;
-  --muted: rgba(226, 241, 248, 0.72);
-  --line: rgba(255, 255, 255, 0.08);
-  --glass: rgba(255, 255, 255, 0.08);
+  --muted: rgba(226, 241, 248, 0.68);
+  --line: rgba(255, 255, 255, 0.09);
+  --glass: rgba(255, 255, 255, 0.07);
   --rose: #ff5a7a;
   --lime: #8dfc61;
   --cyan: #4ed8ff;
@@ -34,9 +34,9 @@ body {
   margin: 0;
   min-height: 100%;
   background:
-    radial-gradient(circle at top, rgba(78, 216, 255, 0.16), transparent 28%),
-    radial-gradient(circle at 20% 80%, rgba(255, 90, 122, 0.14), transparent 26%),
-    linear-gradient(180deg, #031019 0%, #071b28 48%, #020b12 100%);
+    radial-gradient(circle at top, rgba(78, 216, 255, 0.10), transparent 24%),
+    radial-gradient(circle at 20% 80%, rgba(255, 90, 122, 0.09), transparent 22%),
+    linear-gradient(180deg, #020c13 0%, #05131d 46%, #01070c 100%);
   color: var(--ink);
   font-family: 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
 }
