@@ -18,6 +18,7 @@ export interface TrendCardView {
   id: 'sessions' | 'distance' | 'duration' | 'calorie';
   label: string;
   value: string;
+  rawValue: number;
 }
 
 function getLevel(distance: number): 0 | 1 | 2 | 3 | 4 | 5 {
@@ -71,10 +72,10 @@ export function groupHeatmapIntoWeeks(entries: HeatmapCellView[]): HeatmapWeekCo
 
 export function buildTrendCards(totals: MokeWorkoutTotals): TrendCardView[] {
   return [
-    { id: 'sessions', label: '训练次数', value: String(totals.sportCount ?? 0) },
-    { id: 'distance', label: '周期距离', value: formatDistanceKm(totals.totalDistance * 1000) },
-    { id: 'duration', label: '周期时长', value: formatDuration(totals.totalDuration) },
-    { id: 'calorie', label: '周期热量', value: `${Math.round(totals.totalCalorie)} kcal` },
+    { id: 'sessions', label: '训练次数', value: String(totals.sportCount ?? 0), rawValue: totals.sportCount ?? 0 },
+    { id: 'distance', label: '周期距离', value: formatDistanceKm(totals.totalDistance * 1000), rawValue: totals.totalDistance },
+    { id: 'duration', label: '周期时长', value: formatDuration(totals.totalDuration), rawValue: totals.totalDuration },
+    { id: 'calorie', label: '周期热量', value: `${Math.round(totals.totalCalorie)} kcal`, rawValue: totals.totalCalorie },
   ];
 }
 

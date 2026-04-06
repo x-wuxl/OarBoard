@@ -1,10 +1,10 @@
-import { CalendarFirstSection } from '../src/components/calendar-first-section';
 import { DashboardSection } from '../src/components/dashboard-section';
 import { FitnessRings } from '../src/components/fitness-rings';
-import { LifetimeStats } from '../src/components/lifetime-stats';
+import { MacroOverviewSection } from '../src/components/macro-overview';
 import { PosterHero } from '../src/components/poster-hero';
+import { TrendSection } from '../src/components/trend-section';
 import { getCachedWorkoutArtifacts, getTodayTotalsFromUpstream, toHeatmapEntries, toRecentHistoryRecords } from '../src/lib/moke/cache-service';
-import { formatDistanceKm, formatDuration } from '../src/lib/moke/formatters';
+import { formatDistanceKm } from '../src/lib/moke/formatters';
 import { buildCalendarHeatmap, buildTrendCards } from '../src/lib/oarboard/calendar-data';
 import { buildDashboardData, buildWorkoutDetailPanel } from '../src/lib/oarboard/dashboard-data';
 import { buildTodayPosterHeroData } from '../src/lib/oarboard/poster-data';
@@ -25,14 +25,14 @@ function getCurrentMonth(): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 }
 
-function getCurrentWeekRange(): string {
+function getWeekRange(): { start: string; end: string } {
   const now = new Date();
-  const day = now.getDay();
+  const day = now.getDay() || 7;
   const start = new Date(now);
-  start.setDate(now.getDate() - day);
+  start.setDate(now.getDate() - day + 1);
   const end = new Date(start);
   end.setDate(start.getDate() + 6);
-  return `${fmtDate(start)}/${fmtDate(end)}`;
+  return { start: fmtDate(start), end: fmtDate(end) };
 }
 
 export default async function HomePage() {
@@ -127,7 +127,21 @@ export default async function HomePage() {
       { totalDistance: 0, totalCalorie: 0, totalDuration: 0, sportCount: 0 },
     );
 
-  const weekCards = buildTrendCards(todayTotals.data);
+  const { start: weekStart, end: weekEnd } = getWeekRange();
+  const thisWeekRecords = historyRecords.filter((r) => r.day >= weekStart && r.day <= weekEnd);
+  
+  const currentWeekSummary = thisWeekRecords.reduce(
+    (acc, record) => {
+      acc.totalDistance += record.sumMileage;
+      acc.totalCalorie += record.sumCalorie;
+      acc.totalDuration += record.sumDuration;
+      acc.sportCount += 1;
+      return acc;
+    },
+    { totalDistance: 0, totalCalorie: 0, totalDuration: 0, sportCount: 0 }
+  );
+
+  const weekCards = buildTrendCards(currentWeekSummary);
   const monthCards = buildTrendCards(currentMonthSummary
     ? {
         totalDistance: currentMonthSummary.distance,
@@ -138,10 +152,12 @@ export default async function HomePage() {
     : emptyTotals.data);
   const yearCards = buildTrendCards(currentYearSummary);
 
-  const lifetimeDuration = formatDuration(summaryTotals.totalDuration);
-  const lifetimeCalories = `${Math.round(summaryTotals.totalCalorie)} kcal`;
-  const lifetimeDistance = formatDistanceKm(summaryTotals.totalDistance * 1000);
-  const lifetimeSportCount = summaryTotals.sportCount ?? 0;
+  const lifetimeRaw = {
+    totalDurationRaw: summaryTotals.totalDuration,
+    totalCaloriesRaw: summaryTotals.totalCalorie,
+    totalDistanceRaw: summaryTotals.totalDistance,
+    sportCount: summaryTotals.sportCount ?? 0,
+  };
 
   return (
     <main className="relative min-h-screen">
@@ -182,21 +198,9 @@ export default async function HomePage() {
             </div>
           ) : null}
 
+          <MacroOverviewSection heatmap={heatmap} lifetimeRaw={lifetimeRaw} />
 
-
-          <LifetimeStats
-            totalDuration={lifetimeDuration}
-            totalCalories={lifetimeCalories}
-            totalDistance={lifetimeDistance}
-            sportCount={lifetimeSportCount}
-          />
-
-          <CalendarFirstSection
-            heatmap={heatmap}
-            weekCards={weekCards}
-            monthCards={monthCards}
-            yearCards={yearCards}
-          />
+          <TrendSection weekCards={weekCards} monthCards={monthCards} yearCards={yearCards} />
 
           <DashboardSection
             historyRows={dashboard.historyRows}
@@ -213,5 +217,3 @@ export default async function HomePage() {
     </main>
   );
 }
-
-
