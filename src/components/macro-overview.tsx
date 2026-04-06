@@ -156,77 +156,79 @@ export function MacroOverviewSection({ heatmap, lifetimeRaw, streak, fitnessFati
 
         <div className="relative grid items-stretch gap-6 lg:grid-cols-[minmax(340px,0.85fr)_minmax(0,1.15fr)] xl:grid-cols-[minmax(420px,0.95fr)_minmax(0,1.2fr)]">
           <div className="grid min-w-0 grid-cols-2 gap-3 lg:gap-4">
-            <div className="flex min-h-[130px] flex-col justify-between rounded-[1.4rem] border border-white/5 bg-black/30 p-4 shadow-inner transition-colors hover:bg-black/40 lg:min-h-[145px] lg:p-5">
-              <div className="flex items-center gap-2">
-                <Route className="h-4 w-4 stroke-2 text-cyan-400" />
-                <span className="text-[0.68rem] font-medium tracking-[0.12em] text-zinc-500">总运动距离</span>
+            <div className="flex min-h-[130px] flex-col justify-between rounded-[1.5rem] border border-white/6 bg-[linear-gradient(180deg,rgba(10,14,20,0.86),rgba(7,10,16,0.74))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),inset_0_-18px_40px_rgba(0,0,0,0.18)] transition-all duration-300 hover:border-white/8 hover:bg-[linear-gradient(180deg,rgba(12,16,22,0.9),rgba(8,11,18,0.78))] lg:min-h-[145px] lg:p-5">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-[0.68rem] font-medium tracking-[0.14em] text-zinc-500">总运动距离</span>
+                <Route className="h-3.5 w-3.5 stroke-[1.8] text-cyan-300/60" />
               </div>
-              <div className="mt-auto flex items-baseline gap-1.5 pt-2">
-                <span className="font-mono text-3xl font-extrabold tracking-tight text-white/95 lg:text-4xl">
+              <div className="mt-auto flex items-end gap-1.5 pt-3">
+                <span className="font-mono text-[2.1rem] font-extrabold tracking-[-0.04em] text-white/96 lg:text-[2.6rem]">
                   <AnimatedNumber value={lifetimeRaw.totalDistanceRaw} decimals={0} />
                 </span>
-                <span className="mb-0.5 font-mono text-sm text-zinc-500">km</span>
+                <span className="mb-1 font-mono text-[0.72rem] uppercase tracking-[0.18em] text-zinc-500">km</span>
               </div>
             </div>
 
-            <div className="flex min-h-[130px] flex-col justify-between rounded-[1.4rem] border border-white/5 bg-black/30 p-4 shadow-inner transition-colors hover:bg-black/40 lg:min-h-[145px] lg:p-5">
-              <div className="flex items-center gap-2">
-                <Timer className="h-4 w-4 stroke-2 text-lime-400" />
-                <span className="text-[0.68rem] font-medium tracking-[0.12em] text-zinc-500">总运动时长</span>
+            <div className="flex min-h-[130px] flex-col justify-between rounded-[1.5rem] border border-white/6 bg-[linear-gradient(180deg,rgba(10,14,20,0.86),rgba(7,10,16,0.74))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),inset_0_-18px_40px_rgba(0,0,0,0.18)] transition-all duration-300 hover:border-white/8 hover:bg-[linear-gradient(180deg,rgba(12,16,22,0.9),rgba(8,11,18,0.78))] lg:min-h-[145px] lg:p-5">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-[0.68rem] font-medium tracking-[0.14em] text-zinc-500">总运动时长</span>
+                <Timer className="h-3.5 w-3.5 stroke-[1.8] text-lime-300/60" />
               </div>
-              <div className="mt-auto flex items-baseline pt-2 leading-none">
-                <span className="break-all font-mono text-[1.35rem] font-extrabold tracking-tight text-white/95 lg:text-[1.65rem]">
+              <div className="mt-auto flex items-baseline pt-3 leading-none">
+                <span className="break-all font-mono text-[1.45rem] font-extrabold tracking-[-0.04em] text-white/96 lg:text-[1.8rem]">
                   <AnimatedNumber value={lifetimeRaw.totalDurationRaw} isTime={true} />
                 </span>
               </div>
             </div>
 
-            <div className="flex min-h-[130px] flex-col justify-between rounded-[1.4rem] border border-white/5 bg-black/30 p-4 shadow-inner transition-colors hover:bg-black/40 lg:min-h-[145px] lg:p-5">
-              <div className="flex items-center gap-2">
-                <Flame className="h-4 w-4 stroke-2 text-rose-500" />
-                <span className="text-[0.68rem] font-medium tracking-[0.12em] text-zinc-500">总消耗</span>
+            <div className="flex min-h-[130px] flex-col justify-between rounded-[1.5rem] border border-white/6 bg-[linear-gradient(180deg,rgba(10,14,20,0.86),rgba(7,10,16,0.74))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),inset_0_-18px_40px_rgba(0,0,0,0.18)] transition-all duration-300 hover:border-white/8 hover:bg-[linear-gradient(180deg,rgba(12,16,22,0.9),rgba(8,11,18,0.78))] lg:min-h-[145px] lg:p-5">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-[0.68rem] font-medium tracking-[0.14em] text-zinc-500">总消耗</span>
+                <Flame className="h-3.5 w-3.5 stroke-[1.8] text-rose-300/60" />
               </div>
-              <div className="mt-auto flex items-baseline gap-1.5 pt-2">
-                <span className="font-mono text-3xl font-extrabold tracking-tight text-white/95 lg:text-4xl">
+              <div className="mt-auto flex items-end gap-1.5 pt-3">
+                <span className="font-mono text-[2.1rem] font-extrabold tracking-[-0.04em] text-white/96 lg:text-[2.6rem]">
                   <AnimatedNumber value={lifetimeRaw.totalCaloriesRaw} decimals={0} />
                 </span>
-                <span className="mb-0.5 font-mono text-sm text-zinc-500">kcal</span>
+                <span className="mb-1 font-mono text-[0.72rem] uppercase tracking-[0.18em] text-zinc-500">kcal</span>
               </div>
             </div>
 
-            <div className="flex min-h-[130px] flex-col justify-between rounded-[1.4rem] border border-white/5 bg-black/30 p-4 shadow-inner transition-colors hover:bg-black/40 lg:min-h-[145px] lg:p-5">
-              <div className="flex items-center gap-2">
-                <Activity className="h-4 w-4 stroke-2 text-white/90" />
-                <span className="text-[0.68rem] font-medium tracking-[0.12em] text-zinc-500">总训练次数</span>
+            <div className="flex min-h-[130px] flex-col rounded-[1.5rem] border border-white/6 bg-[linear-gradient(180deg,rgba(12,17,24,0.92),rgba(8,11,18,0.82))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),inset_0_-20px_40px_rgba(0,0,0,0.22)] transition-all duration-300 hover:border-white/8 lg:min-h-[145px] lg:p-5">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-[0.68rem] font-medium tracking-[0.14em] text-zinc-500">总训练次数</span>
+                <Activity className="h-3.5 w-3.5 stroke-[1.8] text-white/55" />
               </div>
-              <div className="mt-auto flex items-baseline gap-1.5 pt-2">
-                <span className="font-mono text-3xl font-extrabold tracking-tight text-white/95 lg:text-4xl">
+              <div className="mt-4 flex items-end gap-1.5">
+                <span className="font-mono text-[2.1rem] font-extrabold tracking-[-0.04em] text-white/96 lg:text-[2.6rem]">
                   <AnimatedNumber value={lifetimeRaw.sportCount} decimals={0} />
                 </span>
-                <span className="mb-0.5 font-mono text-sm text-zinc-500">次</span>
+                <span className="mb-1 font-mono text-[0.72rem] tracking-[0.18em] text-zinc-500">次</span>
               </div>
-              <div className="my-3 h-px bg-white/5" />
-              <div className="space-y-1.5 text-xs">
-                <div className="flex items-center justify-between text-zinc-500">
-                  <span>当前连续</span>
-                  <div className="flex items-center gap-1 font-mono text-cyan-300">
-                    <span className={streak.isAtRecord ? 'animate-pulse' : ''}>{streak.currentStreak}</span>
-                    <span>周</span>
+              <div className="mt-auto rounded-[1.1rem] border border-white/6 bg-black/28 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                <div className="flex items-end justify-between gap-3 border-b border-white/6 pb-2.5">
+                  <div>
+                    <div className="text-[0.62rem] font-medium tracking-[0.16em] text-zinc-600">当前连续</div>
+                    <div className="mt-1 flex items-end gap-1 font-mono text-cyan-200/92">
+                      <span className={`text-xl font-extrabold tracking-[-0.04em] ${streak.isAtRecord ? 'animate-pulse' : ''}`}>{streak.currentStreak}</span>
+                      <span className="mb-0.5 text-[0.7rem] tracking-[0.16em] text-cyan-200/60">周</span>
+                    </div>
+                  </div>
+                  <div className="rounded-full border border-cyan-400/15 bg-cyan-400/8 px-2 py-0.5 text-[0.58rem] font-medium tracking-[0.18em] text-cyan-100/60">
+                    STREAK
                   </div>
                 </div>
-                <div className="flex items-center justify-between text-zinc-600">
+                <div className="mt-2.5 flex items-center justify-between text-[0.68rem] tracking-[0.12em] text-zinc-600">
                   <span>历史最长</span>
-                  <div className="font-mono">
-                    {streak.longestStreak} 周
-                  </div>
+                  <span className="font-mono text-zinc-400">{streak.longestStreak} 周</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="flex flex-col rounded-[1.6rem] border border-white/5 bg-black/30 p-5 shadow-inner">
+          <div className="flex flex-col rounded-[1.7rem] border border-white/6 bg-[linear-gradient(180deg,rgba(8,12,18,0.9),rgba(6,9,14,0.78))] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),inset_0_-22px_48px_rgba(0,0,0,0.24)] lg:p-6">
             <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-              <div className="inline-flex rounded-full border border-white/5 bg-zinc-900/40 p-1 shadow-inner backdrop-blur-md">
+              <div className="inline-flex rounded-full border border-white/6 bg-black/25 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-md">
                 {([
                   ['heatmap', '运动热力图'],
                   ['fitness', '体能状态'],
@@ -235,10 +237,10 @@ export function MacroOverviewSection({ heatmap, lifetimeRaw, streak, fitnessFati
                     key={mode}
                     type="button"
                     onClick={() => setPanelMode(mode)}
-                    className={`rounded-full px-4 py-1.5 text-sm transition-all duration-300 ${
+                    className={`rounded-full px-4 py-1.5 text-[0.78rem] font-medium tracking-[0.12em] transition-all duration-300 ${
                       panelMode === mode
-                        ? 'bg-zinc-700/60 text-white shadow-[0_2px_8px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.1)]'
-                        : 'text-zinc-500 hover:bg-white/[0.02] hover:text-white'
+                        ? 'border border-white/10 bg-white/[0.08] text-white shadow-[0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.08)]'
+                        : 'border border-transparent text-zinc-500 hover:text-zinc-300'
                     }`}
                   >
                     {label}
@@ -247,21 +249,21 @@ export function MacroOverviewSection({ heatmap, lifetimeRaw, streak, fitnessFati
               </div>
 
               {panelMode === 'heatmap' ? (
-                <div className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-black/40 p-1 shadow-inner">
+                <div className="flex items-center gap-1 rounded-full border border-white/6 bg-black/25 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                   <button
                     type="button"
                     disabled={!canGoPrev}
                     onClick={handlePrev}
-                    className="flex h-6 w-6 items-center justify-center rounded-[0.3rem] text-xs text-oar-muted transition-colors hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-oar-muted"
+                    className="flex h-7 w-7 items-center justify-center rounded-full text-[0.72rem] text-zinc-500 transition-all duration-300 hover:bg-white/[0.05] hover:text-zinc-200 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-zinc-500"
                   >
                     &larr;
                   </button>
-                  <span className="min-w-[4rem] text-center text-xs font-semibold tracking-wider text-white/80">{heatmapLabel}</span>
+                  <span className="min-w-[4.75rem] text-center text-[0.68rem] font-semibold tracking-[0.16em] text-zinc-400">{heatmapLabel}</span>
                   <button
                     type="button"
                     disabled={!canGoNext}
                     onClick={handleNext}
-                    className="flex h-6 w-6 items-center justify-center rounded-[0.3rem] text-xs text-oar-muted transition-colors hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-oar-muted"
+                    className="flex h-7 w-7 items-center justify-center rounded-full text-[0.72rem] text-zinc-500 transition-all duration-300 hover:bg-white/[0.05] hover:text-zinc-200 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-zinc-500"
                   >
                     &rarr;
                   </button>
@@ -271,12 +273,12 @@ export function MacroOverviewSection({ heatmap, lifetimeRaw, streak, fitnessFati
 
             <AnimatePresence mode="wait">
               {panelMode === 'heatmap' ? (
-                <motion.div key="heatmap" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-1 flex-col">
-                  <div className="flex flex-1 items-center overflow-x-auto pb-2 md:overflow-visible">
-                    <div className="grid min-w-[680px] w-full gap-[3px]" style={{ gridTemplateColumns: desktopColumns }}>
+                <motion.div key="heatmap" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-1 flex-col rounded-[1.45rem] border border-white/5 bg-black/18 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                  <div className="flex flex-1 items-center overflow-x-auto pb-3 md:overflow-visible">
+                    <div className="grid min-w-[680px] w-full gap-[4px]" style={{ gridTemplateColumns: desktopColumns }}>
                       {weekColumns.map((column) => (
-                        <div key={column.key} className="grid justify-items-center gap-[3px]">
-                          <div className="mb-1 flex h-3 items-end text-center text-[0.6rem] tracking-[0.05em] text-zinc-600">
+                        <div key={column.key} className="grid justify-items-center gap-[4px]">
+                          <div className="mb-2 flex h-3 items-end text-center text-[0.58rem] font-medium tracking-[0.12em] text-zinc-600/90">
                             {column.monthLabel ? column.monthLabel : ''}
                           </div>
                           {Array.from({ length: 7 }, (_, weekday) => {
@@ -288,7 +290,7 @@ export function MacroOverviewSection({ heatmap, lifetimeRaw, streak, fitnessFati
                                 onMouseEnter={cell && cell.distance > 0 ? (event) => setHoveredCell({ date: cell.date, distance: cell.distance, rect: event.currentTarget.getBoundingClientRect() }) : undefined}
                                 onMouseLeave={cell && cell.distance > 0 ? () => setHoveredCell(null) : undefined}
                               >
-                                <div className={`h-full w-full rounded-[0.25rem] border transition-colors duration-300 ${cell ? 'border-white/5' : 'border-white/[0.02] bg-zinc-800/10'} ${cell ? palette[cell.level] : ''} ${cell && cell.distance > 0 ? 'hover:border-white/40' : ''}`} />
+                                <div className={`h-full w-full rounded-[0.3rem] border transition-colors duration-300 ${cell ? 'border-white/[0.04]' : 'border-white/[0.015] bg-zinc-800/8'} ${cell ? palette[cell.level] : ''} ${cell && cell.distance > 0 ? 'hover:border-white/20' : ''}`} />
                               </div>
                             );
                           })}
@@ -297,34 +299,34 @@ export function MacroOverviewSection({ heatmap, lifetimeRaw, streak, fitnessFati
                     </div>
                   </div>
 
-                  <div className="mt-4 flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 text-[0.65rem] text-zinc-500">
+                  <div className="mt-3 flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-[0.62rem] font-medium tracking-[0.12em] text-zinc-600">
                       <span>少</span>
                       {palette.map((tone, index) => (
-                        <span key={index} className={`h-2.5 w-2.5 rounded-sm shadow-inner ${tone}`} />
+                        <span key={index} className={`h-2.5 w-2.5 rounded-[0.28rem] border border-white/[0.04] shadow-inner ${tone}`} />
                       ))}
                       <span>多</span>
                     </div>
                   </div>
                 </motion.div>
               ) : (
-                <motion.div key="fitness" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-1 flex-col">
-                  <div className="h-[250px] rounded-[1.4rem] border border-cyan-400/10 bg-[linear-gradient(180deg,rgba(12,26,36,0.6),rgba(7,18,26,0.8))] p-4 shadow-[inset_0_2px_20px_rgba(0,0,0,0.5)]">
+                <motion.div key="fitness" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-1 flex-col rounded-[1.45rem] border border-white/5 bg-black/18 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                  <div className="h-[250px] rounded-[1.3rem] border border-white/6 bg-[linear-gradient(180deg,rgba(9,18,25,0.88),rgba(6,12,18,0.94))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),inset_0_-18px_32px_rgba(0,0,0,0.28)]">
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={fitnessFatigue.points} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                         <defs>
                           <linearGradient id="ctlFill" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#22d3ee" stopOpacity={0.28} />
+                            <stop offset="0%" stopColor="#22d3ee" stopOpacity={0.22} />
                             <stop offset="100%" stopColor="#22d3ee" stopOpacity={0} />
                           </linearGradient>
                           <linearGradient id="atlFill" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.22} />
+                            <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.16} />
                             <stop offset="100%" stopColor="#f59e0b" stopOpacity={0} />
                           </linearGradient>
                         </defs>
-                        <CartesianGrid stroke="rgba(255,255,255,0.03)" vertical={false} />
-                        <XAxis dataKey="date" tick={{ fill: 'rgba(161,161,170,0.8)', fontSize: 10, fontFamily: 'monospace' }} axisLine={false} tickLine={false} minTickGap={28} />
-                        <YAxis tick={{ fill: 'rgba(161,161,170,0.6)', fontSize: 10, fontFamily: 'monospace' }} axisLine={false} tickLine={false} width={40} />
+                        <CartesianGrid stroke="rgba(255,255,255,0.025)" vertical={false} />
+                        <XAxis dataKey="date" tick={{ fill: 'rgba(161,161,170,0.68)', fontSize: 10, fontFamily: 'monospace' }} axisLine={false} tickLine={false} minTickGap={28} />
+                        <YAxis tick={{ fill: 'rgba(161,161,170,0.52)', fontSize: 10, fontFamily: 'monospace' }} axisLine={false} tickLine={false} width={40} />
                         <Tooltip
                           contentStyle={{
                             background: 'rgba(9, 9, 11, 0.95)',
@@ -341,13 +343,16 @@ export function MacroOverviewSection({ heatmap, lifetimeRaw, streak, fitnessFati
                     </ResponsiveContainer>
                   </div>
 
-                  <div className="mt-4 flex items-center justify-between rounded-xl border border-white/5 bg-black/20 px-4 py-2.5 text-sm">
+                  <div className="mt-4 grid gap-3 rounded-[1.15rem] border border-white/6 bg-[linear-gradient(180deg,rgba(8,12,18,0.72),rgba(5,8,13,0.88))] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:grid-cols-[auto_1fr_auto] sm:items-center">
                     <div className="flex items-center gap-2">
-                      <span className={`h-2.5 w-2.5 rounded-full ${statusTone}`} />
-                      <span className="text-white/85">当前状态: {fitnessFatigue.status.label}</span>
+                      <span className={`h-2.5 w-2.5 rounded-full shadow-[0_0_10px_rgba(255,255,255,0.12)] ${statusTone}`} />
+                      <span className="text-[0.72rem] font-medium tracking-[0.16em] text-zinc-500">TSB STATUS</span>
                     </div>
-                    <div className="font-mono text-zinc-300">TSB {fitnessFatigue.status.tsb >= 0 ? '+' : ''}{fitnessFatigue.status.tsb}</div>
-                    <div className="hidden text-xs text-zinc-500 sm:block">建议: {fitnessFatigue.status.suggestion}</div>
+                    <div className="flex items-baseline gap-2 text-white/88">
+                      <span className="text-sm font-medium tracking-[0.06em]">{fitnessFatigue.status.label}</span>
+                      <span className="font-mono text-[0.78rem] tracking-[0.14em] text-zinc-400">TSB {fitnessFatigue.status.tsb >= 0 ? '+' : ''}{fitnessFatigue.status.tsb}</span>
+                    </div>
+                    <div className="text-[0.72rem] tracking-[0.08em] text-zinc-500 sm:text-right">建议: {fitnessFatigue.status.suggestion}</div>
                   </div>
                 </motion.div>
               )}
