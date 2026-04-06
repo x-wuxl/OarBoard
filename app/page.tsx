@@ -3,12 +3,27 @@ import { FitnessRings } from '../src/components/fitness-rings';
 import { MacroOverviewSection } from '../src/components/macro-overview';
 import { PosterHero } from '../src/components/poster-hero';
 import { TrendSection } from '../src/components/trend-section';
-import { getCachedWorkoutArtifacts, getTodayTotalsFromUpstream, toHeatmapEntries, toRecentHistoryRecords } from '../src/lib/moke/cache-service';
+import { VoyageSection } from '../src/components/voyage-section';
+import { getAllHistoryRecords, getCachedWorkoutArtifacts, getTodayTotalsFromUpstream, toHeatmapEntries, toRecentHistoryRecords } from '../src/lib/moke/cache-service';
 import { formatDistanceKm } from '../src/lib/moke/formatters';
 import { buildCalendarHeatmap, buildTrendCards } from '../src/lib/oarboard/calendar-data';
 import { buildDashboardData, buildWorkoutDetailPanel } from '../src/lib/oarboard/dashboard-data';
+import { buildDnaMap } from '../src/lib/oarboard/dna-data';
+import { buildFitnessFatigueData } from '../src/lib/oarboard/fitness-fatigue-data';
+import { buildMilestones, buildStreakData } from '../src/lib/oarboard/milestones-data';
 import { buildTodayPosterHeroData } from '../src/lib/oarboard/poster-data';
-import type { MokeWorkoutTotalsResponse } from '../src/lib/moke/types';
+import { buildTimeMachineEntry } from '../src/lib/oarboard/time-machine-data';
+import { buildVoyageProgress } from '../src/lib/oarboard/voyage-data';
+import type { DnaFingerprint } from '../src/lib/oarboard/dna-data';
+import type { MokeWorkoutRecord, MokeWorkoutTotalsResponse } from '../src/lib/moke/types';
+
+function mapById<T extends { _id: string }>(items: T[]): Record<string, T> {
+  return Object.fromEntries(items.map((item) => [item._id, item]));
+}
+
+function serializeDnaMap(records: MokeWorkoutRecord[]): Record<string, DnaFingerprint> {
+  return Object.fromEntries(buildDnaMap(records).entries());
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -75,7 +90,16 @@ export default async function HomePage() {
     sportCount: 0,
   };
   const historyRecords = summary ? toRecentHistoryRecords(summary) : [];
-  const todayRecords = historyRecords.filter((record) => record.day === today);
+  const allHistoryRecords = accountId ? await getAllHistoryRecords(accountId).catch(() => historyRecords) : historyRecords;
+  const recordsForAnalysis = allHistoryRecords.length > 0 ? allHistoryRecords : historyRecords;
+  const todayRecords = recordsForAnalysis.filter((record) => record.day === today);
+  const dnaById = serializeDnaMap(historyRecords);
+  const streak = buildStreakData(recordsForAnalysis, today);
+  const milestones = buildMilestones(recordsForAnalysis, summaryTotals.totalDistance, today);
+  const fitnessFatigue = buildFitnessFatigueData(recordsForAnalysis, today);
+  const voyage = buildVoyageProgress(summaryTotals.totalDistance);
+  const timeMachineEntry = buildTimeMachineEntry(recordsForAnalysis, todayRecords, today);
+  const historyById = mapById(recordsForAnalysis);
 
   let todayTotals = emptyTotals;
 
@@ -104,7 +128,7 @@ export default async function HomePage() {
     chartPoints: [],
   };
   const detailsById = Object.fromEntries(
-    historyRecords.map((record) => [record._id, buildWorkoutDetailPanel(record)]),
+    historyRecords.map((record) => [record._id, buildWorkoutDetailPanel(historyById[record._id] ?? record)]),
   );
 
   if (Object.keys(detailsById).length === 0) {
@@ -183,6 +207,7 @@ export default async function HomePage() {
             calories={`${Math.round(hero.calorie.value)} kcal`}
             hasWorkout={hasWorkoutToday}
             ringData={{ calorie: hero.calorie, duration: hero.duration, distance: hero.distance }}
+            timeMachineEntry={timeMachineEntry}
           >
             <FitnessRings
               calorie={hero.calorie}
@@ -198,13 +223,17 @@ export default async function HomePage() {
             </div>
           ) : null}
 
-          <MacroOverviewSection heatmap={heatmap} lifetimeRaw={lifetimeRaw} />
+          <MacroOverviewSection heatmap={heatmap} lifetimeRaw={lifetimeRaw} streak={streak} fitnessFatigue={fitnessFatigue} />
+
+          <VoyageSection voyage={voyage} />
 
           <TrendSection weekCards={weekCards} monthCards={monthCards} yearCards={yearCards} />
 
           <DashboardSection
             historyRows={dashboard.historyRows}
             detailsById={detailsById}
+            dnaById={dnaById}
+            milestones={milestones}
             defaultSelectedId={dashboard.selectedWorkoutId ?? Object.keys(detailsById)[0] ?? null}
           />
         </div>

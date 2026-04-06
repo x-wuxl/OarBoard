@@ -1,4 +1,7 @@
+import { motion } from 'framer-motion';
+
 import { AnimatedNumber, AnimatedProgressBar } from './animated-metrics';
+import type { TimeMachineEntry } from '../lib/oarboard/time-machine-data';
 
 interface PosterHeroProps {
   averagePace: string;
@@ -13,6 +16,7 @@ interface PosterHeroProps {
     duration: { value: number; goal: number };
     distance: { value: number; goal: number };
   };
+  timeMachineEntry?: TimeMachineEntry | null;
   children: React.ReactNode;
 }
 
@@ -25,95 +29,116 @@ export function PosterHero({
   calories,
   hasWorkout,
   ringData,
+  timeMachineEntry,
   children,
 }: PosterHeroProps) {
   const paceValue = averagePace.split('/')[0] || '--:--';
   const paceUnit = averagePace.includes('/') ? `/${averagePace.split('/').slice(1).join('/')}` : '';
 
   return (
-    <section className="py-8 lg:py-10">
-      <div className="relative overflow-hidden rounded-[2.2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.10),rgba(255,255,255,0.035))] p-6 shadow-[0_30px_120px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.14)] backdrop-blur-[30px] lg:p-8">
-        <div className="pointer-events-none absolute inset-x-10 top-0 h-28 rounded-full bg-cyan-300/10 blur-3xl" />
-        <div className="pointer-events-none absolute right-0 top-14 h-36 w-36 rounded-full bg-rose-400/10 blur-3xl" />
+    <section className="py-7 lg:py-9">
+      <div className="relative overflow-hidden rounded-[2.1rem] border border-white/12 bg-[linear-gradient(180deg,rgba(18,24,34,0.90),rgba(18,24,34,0.72))] p-5 shadow-[0_24px_90px_rgba(0,0,0,0.34),inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-[30px] lg:p-7">
+        <div className="pointer-events-none absolute inset-x-12 top-0 h-24 rounded-full bg-cyan-300/7 blur-3xl" />
+        <div className="pointer-events-none absolute right-2 top-16 h-32 w-32 rounded-full bg-rose-400/7 blur-3xl" />
 
         {hasWorkout ? (
-          <div className="relative grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-            {/* 左侧核心 (2x2) */}
-            <div className="col-span-2 lg:row-span-2 flex flex-col justify-center items-center rounded-3xl border border-white/5 bg-zinc-900/40 p-6 lg:p-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_8px_16px_rgba(0,0,0,0.4)] backdrop-blur-sm">
+          <div className="relative grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-[0.9rem]">
+            <div className="col-span-2 flex flex-col items-center justify-center rounded-[1.9rem] border border-white/5 bg-zinc-950/42 p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_10px_22px_rgba(0,0,0,0.30)] backdrop-blur-sm lg:row-span-2 lg:p-8">
               {children}
             </div>
 
-            {/* 右侧重点 1: 500m 配速 */}
-            <div className="col-span-2 rounded-3xl border border-white/5 bg-zinc-900/50 p-5 lg:p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_8px_16px_rgba(0,0,0,0.4)] flex flex-col justify-center transition-all hover:bg-zinc-800/50">
-              <div className="text-sm tracking-[0.05em] text-zinc-500 font-medium mb-1">500m 配速</div>
-              <div className="flex items-baseline gap-1">
-                <span className="font-mono text-4xl lg:text-5xl font-bold tracking-tight text-white">{paceValue}</span>
-                <span className="font-mono text-sm lg:text-base text-zinc-500">{paceUnit}</span>
+            <div className="col-span-2 flex flex-col justify-center rounded-[1.8rem] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_12px_26px_rgba(0,0,0,0.28)] transition-colors duration-300 hover:bg-[linear-gradient(180deg,rgba(255,255,255,0.10),rgba(255,255,255,0.04))] lg:p-6">
+              <div className="mb-2 text-[0.72rem] font-medium tracking-[0.14em] text-zinc-500/90">500m 配速</div>
+              <div className="flex items-baseline gap-1.5">
+                <span className="font-mono text-4xl font-bold tracking-tight text-white lg:text-5xl">{paceValue}</span>
+                <span className="font-mono text-sm text-zinc-500/90 lg:text-base">{paceUnit}</span>
               </div>
             </div>
 
-            {/* 右侧重点 2: 今日距离 */}
-            <div className="col-span-2 rounded-3xl border border-white/5 bg-zinc-900/50 p-5 lg:p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_8px_16px_rgba(0,0,0,0.4)] flex flex-col justify-center transition-all hover:bg-zinc-800/50">
-              <div className="text-sm tracking-[0.05em] text-zinc-500 font-medium mb-2">今日距离</div>
-              <div className="flex items-baseline gap-1">
-                <span className="font-mono text-4xl lg:text-5xl font-bold tracking-tight text-white">
+            <div className="col-span-2 flex flex-col justify-center rounded-[1.8rem] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_12px_26px_rgba(0,0,0,0.28)] transition-colors duration-300 hover:bg-[linear-gradient(180deg,rgba(255,255,255,0.10),rgba(255,255,255,0.04))] lg:p-6">
+              <div className="mb-2 text-[0.72rem] font-medium tracking-[0.14em] text-zinc-500/90">今日距离</div>
+              <div className="flex items-baseline gap-1.5">
+                <span className="font-mono text-4xl font-bold tracking-tight text-white lg:text-5xl">
                   <AnimatedNumber value={ringData.distance.value / 1000} decimals={2} />
                 </span>
-                <span className="font-mono text-sm lg:text-base text-zinc-500">km</span>
+                <span className="font-mono text-sm text-zinc-500/90 lg:text-base">km</span>
               </div>
               <div className="mt-4">
                 <AnimatedProgressBar progress={ringData.distance.value / ringData.distance.goal} colorClass="bg-oar-cyan" />
               </div>
             </div>
 
-            {/* 右侧次要 1: 桨频 */}
-            <div className="col-span-1 rounded-[1.6rem] border border-white/5 bg-zinc-900/50 p-4 lg:p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_8px_16px_rgba(0,0,0,0.4)] flex flex-col justify-between transition-all hover:bg-zinc-800/50">
-              <div className="text-xs lg:text-sm tracking-[0.05em] text-zinc-500 font-medium mb-2">桨频</div>
+            <div className="col-span-1 flex flex-col justify-between rounded-[1.45rem] border border-white/[0.04] bg-white/[0.025] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-colors duration-300 hover:bg-white/[0.035] lg:p-[1.1rem]">
+              <div className="mb-3 text-[0.68rem] font-medium tracking-[0.12em] text-zinc-500/80 lg:text-[0.72rem]">桨频</div>
               <div className="flex items-baseline gap-1">
-                <span className="font-mono text-2xl lg:text-3xl font-bold tracking-tight text-white">
+                <span className="font-mono text-[1.65rem] font-bold tracking-tight text-white/92 lg:text-[1.9rem]">
                   <AnimatedNumber value={parseFloat(averageRpm) || 0} decimals={1} />
                 </span>
-                <span className="font-mono text-xs text-zinc-500">spm</span>
+                <span className="font-mono text-[0.68rem] text-zinc-500/75">spm</span>
               </div>
             </div>
 
-            {/* 右侧次要 2: 桨次 */}
-            <div className="col-span-1 rounded-[1.6rem] border border-white/5 bg-zinc-900/50 p-4 lg:p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] flex flex-col justify-between transition-all hover:bg-zinc-800/50">
-              <div className="text-xs lg:text-sm tracking-[0.05em] text-zinc-500 font-medium mb-2">桨次</div>
+            <div className="col-span-1 flex flex-col justify-between rounded-[1.45rem] border border-white/[0.04] bg-white/[0.025] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-colors duration-300 hover:bg-white/[0.035] lg:p-[1.1rem]">
+              <div className="mb-3 text-[0.68rem] font-medium tracking-[0.12em] text-zinc-500/80 lg:text-[0.72rem]">桨次</div>
               <div className="flex items-baseline gap-1">
-                <span className="font-mono text-2xl lg:text-3xl font-bold tracking-tight text-white">
+                <span className="font-mono text-[1.65rem] font-bold tracking-tight text-white/92 lg:text-[1.9rem]">
                   <AnimatedNumber value={parseInt(totalTurns) || 0} decimals={0} />
                 </span>
-                <span className="font-mono text-xs text-zinc-500">次</span>
+                <span className="font-mono text-[0.68rem] text-zinc-500/75">次</span>
               </div>
             </div>
 
-            {/* 右侧次要 3: 今日时长 */}
-            <div className="col-span-1 rounded-[1.6rem] border border-white/5 bg-zinc-900/50 p-4 lg:p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] flex flex-col justify-between transition-all hover:bg-zinc-800/50">
-              <div className="text-xs lg:text-sm tracking-[0.05em] text-zinc-500 font-medium mb-2">今日时长</div>
+            <div className="col-span-1 flex flex-col justify-between rounded-[1.45rem] border border-white/[0.04] bg-white/[0.025] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-colors duration-300 hover:bg-white/[0.035] lg:p-[1.1rem]">
+              <div className="mb-3 text-[0.68rem] font-medium tracking-[0.12em] text-zinc-500/80 lg:text-[0.72rem]">今日时长</div>
               <div className="flex items-baseline gap-1">
-                <span className="font-mono text-lg lg:text-2xl font-bold tracking-tight text-white">
+                <span className="font-mono text-base font-bold tracking-tight text-white/90 lg:text-[1.35rem]">
                   <AnimatedNumber value={ringData.duration.value} isTime={true} />
                 </span>
               </div>
-              <div className="mt-3">
+              <div className="mt-3 opacity-80">
                 <AnimatedProgressBar progress={ringData.duration.value / ringData.duration.goal} colorClass="bg-oar-lime" />
               </div>
             </div>
 
-            {/* 右侧次要 4: 今日消耗 */}
-            <div className="col-span-1 rounded-[1.6rem] border border-white/5 bg-zinc-900/50 p-4 lg:p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] flex flex-col justify-between transition-all hover:bg-zinc-800/50">
-              <div className="text-xs lg:text-sm tracking-[0.05em] text-zinc-500 font-medium mb-2">今日消耗</div>
+            <div className="col-span-1 flex flex-col justify-between rounded-[1.45rem] border border-white/[0.04] bg-white/[0.025] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-colors duration-300 hover:bg-white/[0.035] lg:p-[1.1rem]">
+              <div className="mb-3 text-[0.68rem] font-medium tracking-[0.12em] text-zinc-500/80 lg:text-[0.72rem]">今日消耗</div>
               <div className="flex items-baseline gap-1">
-                <span className="font-mono text-2xl lg:text-3xl font-bold tracking-tight text-white">
+                <span className="font-mono text-[1.65rem] font-bold tracking-tight text-white/92 lg:text-[1.9rem]">
                   <AnimatedNumber value={ringData.calorie.value} decimals={0} />
                 </span>
-                <span className="font-mono text-xs text-zinc-500">kcal</span>
+                <span className="font-mono text-[0.68rem] text-zinc-500/75">kcal</span>
               </div>
-              <div className="mt-3">
+              <div className="mt-3 opacity-80">
                 <AnimatedProgressBar progress={ringData.calorie.value / ringData.calorie.goal} colorClass="bg-oar-rose" />
               </div>
             </div>
+
+            {timeMachineEntry ? (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                className="col-span-full mt-1 rounded-[1.35rem] border border-white/[0.05] bg-white/[0.02] px-4 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
+              >
+                <div className="flex gap-3">
+                  <div className="mt-0.5 w-px rounded-full bg-white/10" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[0.68rem] uppercase tracking-[0.18em] text-zinc-500/80">{timeMachineEntry.label}</div>
+                    <div className="mt-2 font-mono text-sm text-white/72 lg:text-[0.92rem]">你划了 {timeMachineEntry.distance} · {timeMachineEntry.duration} · 配速 {timeMachineEntry.pace}</div>
+                    {timeMachineEntry.comparison ? (
+                      <div className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1 text-[0.72rem] tracking-[0.06em]">
+                        <span className={timeMachineEntry.comparison.distancePositive ? 'text-emerald-400/75' : 'text-amber-300/75'}>
+                          距离 {timeMachineEntry.comparison.distanceDelta} {timeMachineEntry.comparison.distancePositive ? '↑' : '↓'}
+                        </span>
+                        <span className={timeMachineEntry.comparison.pacePositive ? 'text-emerald-400/75' : 'text-amber-300/75'}>
+                          配速 {timeMachineEntry.comparison.paceDeltaLabel}
+                        </span>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              </motion.div>
+            ) : null}
           </div>
         ) : (
           <div className="relative grid place-items-center py-10">
