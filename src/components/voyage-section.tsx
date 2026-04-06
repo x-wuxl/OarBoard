@@ -28,51 +28,61 @@ export function VoyageSection({ voyage }: VoyageSectionProps) {
         viewport={{ once: true, amount: 0.2 }}
         transition={{ duration: 0.72, ease: [0.16, 1, 0.3, 1] }}
       >
-        <div className="pointer-events-none absolute inset-x-16 top-6 h-24 rounded-full bg-cyan-300/10 blur-3xl" />
+        <div className="pointer-events-none absolute inset-x-20 top-6 h-20 rounded-full bg-cyan-300/[0.08] blur-3xl" />
 
         <div className="relative rounded-[1.6rem] border border-white/5 bg-black/20 p-4 lg:p-5 shadow-inner">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <div className="text-sm font-medium tracking-wide text-white/90">{voyage.currentRoute.name}</div>
-              <div className="mt-1 text-xs tracking-[0.08em] text-zinc-500">{voyage.currentRoute.region} · 第 {completedCount + 1} 段远征</div>
+              <div className="text-[0.95rem] font-medium tracking-[0.02em] text-white/88">{voyage.currentRoute.name}</div>
+              <div className="mt-1 text-[0.68rem] font-medium uppercase tracking-[0.14em] text-zinc-500/95">{voyage.currentRoute.region} · 第 {completedCount + 1} 段远征</div>
             </div>
-            <div className="rounded-full border border-cyan-400/20 bg-cyan-400/[0.08] px-3 py-1 font-mono text-[0.68rem] tracking-wider text-cyan-300 shadow-inner">
+            <div className="rounded-full border border-cyan-400/15 bg-cyan-400/[0.06] px-3 py-1 font-mono text-[0.68rem] tracking-[0.18em] text-cyan-200/90 shadow-inner">
               {progressPercent}%
             </div>
           </div>
 
-          <div className="mt-5 overflow-hidden rounded-[1.4rem] border border-white/5 bg-[linear-gradient(180deg,rgba(8,16,24,0.85),rgba(6,12,18,0.92))] p-4 lg:p-5">
+          <div className="mt-5 overflow-hidden rounded-[1.4rem] border border-white/5 bg-[linear-gradient(180deg,rgba(8,16,24,0.84),rgba(5,10,16,0.94))] p-4 lg:p-5">
             <svg viewBox="0 0 800 200" className="h-[150px] w-full" aria-label={voyage.currentRoute.name}>
               <path
                 d={voyage.currentRoute.path}
                 fill="none"
-                stroke="rgba(255,255,255,0.08)"
-                strokeWidth="2"
-                strokeDasharray="6 6"
+                stroke="rgba(255,255,255,0.05)"
+                strokeWidth="1.75"
+                strokeDasharray="4 9"
                 strokeLinecap="round"
               />
               <motion.path
                 d={voyage.currentRoute.path}
                 fill="none"
-                stroke="#22d3ee"
-                strokeWidth="3"
+                stroke="rgba(103,232,249,0.92)"
+                strokeWidth="3.2"
                 strokeLinecap="round"
                 initial={{ pathLength: 0 }}
                 whileInView={{ pathLength: Math.max(voyage.routeProgress, 0.001) }}
                 viewport={{ once: true }}
                 transition={{ duration: 1.8, ease: [0.16, 1, 0.3, 1] }}
-                style={{ filter: 'drop-shadow(0 0 8px rgba(34,211,238,0.45))' }}
+                style={{ filter: 'drop-shadow(0 0 6px rgba(34,211,238,0.2)) drop-shadow(0 0 14px rgba(34,211,238,0.16))' }}
               />
-              <circle cx="40" cy="100" r="4" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="1.5" />
-              <circle cx="760" cy="90" r="4" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="1.5" />
+              <circle cx="40" cy="100" r="4" fill="none" stroke="rgba(255,255,255,0.22)" strokeWidth="1.25" />
+              <circle cx="760" cy="90" r="4" fill="none" stroke="rgba(255,255,255,0.22)" strokeWidth="1.25" />
               <motion.circle
                 cx={40 + 720 * Math.min(voyage.routeProgress, 1)}
                 cy={100 - 10 * Math.sin(Math.min(voyage.routeProgress, 1) * Math.PI)}
-                r={5}
-                fill="#22d3ee"
-                animate={{ opacity: [1, 0.45, 1], scale: [1, 1.2, 1] }}
-                transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-                style={{ filter: 'drop-shadow(0 0 8px rgba(34,211,238,0.8))' }}
+                r={10}
+                fill="rgba(34,211,238,0.14)"
+                animate={{ opacity: [0.45, 0.8, 0.45], scale: [0.92, 1.12, 0.92] }}
+                transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
+              />
+              <motion.circle
+                cx={40 + 720 * Math.min(voyage.routeProgress, 1)}
+                cy={100 - 10 * Math.sin(Math.min(voyage.routeProgress, 1) * Math.PI)}
+                r={4.5}
+                fill="#67e8f9"
+                stroke="rgba(224,255,255,0.7)"
+                strokeWidth="1.2"
+                animate={{ opacity: [0.92, 1, 0.92], scale: [1, 1.06, 1] }}
+                transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
+                style={{ filter: 'drop-shadow(0 0 8px rgba(103,232,249,0.55))' }}
               />
             </svg>
           </div>
@@ -100,12 +110,12 @@ export function VoyageSection({ voyage }: VoyageSectionProps) {
               return (
                 <div
                   key={route.id}
-                  className={`whitespace-nowrap rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                  className={`whitespace-nowrap rounded-[0.8rem] border px-3 py-1.5 text-[0.68rem] font-medium uppercase tracking-[0.12em] transition-colors ${
                     isCompleted
-                      ? 'border-cyan-400/20 bg-cyan-400/[0.12] text-cyan-200'
+                      ? 'border-cyan-400/15 bg-cyan-400/[0.08] text-cyan-100/80'
                       : isCurrent
-                        ? 'border-white/10 bg-white/[0.06] text-white/85'
-                        : 'border-white/5 bg-white/[0.02] text-zinc-600'
+                        ? 'border-white/12 bg-white/[0.07] text-white/82'
+                        : 'border-white/5 bg-white/[0.02] text-zinc-500'
                   }`}
                 >
                   {route.name}
