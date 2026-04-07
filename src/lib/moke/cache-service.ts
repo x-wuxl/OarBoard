@@ -233,10 +233,10 @@ export function toHeatmapEntries(heatmap: CachedHeatmapFile) {
     .sort((a, b) => a._id.localeCompare(b._id));
 }
 
-export function toRecentHistoryRecords(summary: CachedSummaryFile) {
-  return summary.recentRecords.map((record) => ({
+function toWorkoutRecord(accountId: string, record: CachedMonthFile['records'][number]): MokeWorkoutRecord {
+  return {
     _id: record.id,
-    accountId: summary.accountId,
+    accountId,
     deviceType: record.deviceType,
     sumMileage: record.sumMileage,
     sumCalorie: record.sumCalorie,
@@ -249,5 +249,19 @@ export function toRecentHistoryRecords(summary: CachedSummaryFile) {
     day: record.day,
     year: record.year,
     month: record.month,
-  }));
+  };
+}
+
+export function toRecentHistoryRecords(summary: CachedSummaryFile) {
+  return summary.recentRecords.map((record) => toWorkoutRecord(summary.accountId, record));
+}
+
+export async function getAllHistoryRecords(accountId: string): Promise<MokeWorkoutRecord[]> {
+  const index = await readWorkoutIndexCache(accountId);
+  const monthFiles = await Promise.all((index?.months ?? []).map((month) => readWorkoutMonthCache(accountId, month.month)));
+
+  return monthFiles
+    .filter((month): month is CachedMonthFile => month !== null)
+    .flatMap((month) => month.records.map((record) => toWorkoutRecord(accountId, record)))
+    .sort((a, b) => b.startTime.localeCompare(a.startTime));
 }

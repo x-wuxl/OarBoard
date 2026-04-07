@@ -42,10 +42,10 @@ describe('buildTrendCards', () => {
         sportCount: 11,
       }),
     ).toEqual([
-      { id: 'sessions', label: '训练次数', value: '11' },
-      { id: 'distance', label: '周期距离', value: '30.23 km' },
-      { id: 'duration', label: '周期时长', value: '02:18:54' },
-      { id: 'calorie', label: '周期热量', value: '2129 kcal' },
+      { id: 'sessions', label: '训练次数', value: '11', rawValue: 11 },
+      { id: 'distance', label: '周期距离', value: '30.23 km', rawValue: 30.23 },
+      { id: 'duration', label: '周期时长', value: '02:18:54', rawValue: 8334 },
+      { id: 'calorie', label: '周期热量', value: '2129 kcal', rawValue: 2129 },
     ]);
   });
 });

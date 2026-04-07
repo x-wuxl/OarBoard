@@ -5,6 +5,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 import type { WorkoutHistoryRowView } from '../lib/oarboard/dashboard-data';
+import type { DnaFingerprint } from '../lib/oarboard/dna-data';
+import type { MilestoneView } from '../lib/oarboard/milestones-data';
 
 interface DashboardSectionProps {
   historyRows: WorkoutHistoryRowView[];
@@ -17,29 +19,32 @@ interface DashboardSectionProps {
     totalTurns: string;
     chartPoints: Array<{ minute: number; speed: number; rpm: number; pace: string }>;
   }>;
+  dnaById: Record<string, DnaFingerprint>;
+  milestones: MilestoneView[];
   defaultSelectedId: string | null;
 }
 
 const PAGE_SIZE = 10;
-
 const transition = {
   duration: 0.75,
   ease: [0.16, 1, 0.3, 1] as const,
 };
 
-export function DashboardSection({ historyRows, detailsById, defaultSelectedId }: DashboardSectionProps) {
+export function DashboardSection({ historyRows, detailsById, dnaById, milestones, defaultSelectedId }: DashboardSectionProps) {
   const [selectedId, setSelectedId] = React.useState(defaultSelectedId);
   const [page, setPage] = React.useState(0);
+  const [expandedMilestones, setExpandedMilestones] = React.useState(false);
   const detail = (selectedId && detailsById[selectedId]) || (defaultSelectedId ? detailsById[defaultSelectedId] : undefined);
 
   const totalPages = Math.max(1, Math.ceil(historyRows.length / PAGE_SIZE));
   const visibleRows = historyRows.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const visibleMilestones = expandedMilestones ? milestones : milestones.slice(0, 4);
 
   return (
-    <section className="mt-8 lg:mt-12 mb-16">
+    <section className="mb-16 mt-8 lg:mt-12">
       <div className="grid gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(22rem,0.9fr)]">
         <motion.section
-          className="rounded-[2.2rem] border border-white/5 bg-zinc-900/30 p-6 lg:p-8 backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_15px_40px_rgba(0,0,0,0.3)]"
+          className="rounded-[2.2rem] border border-white/5 bg-zinc-900/30 p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_15px_40px_rgba(0,0,0,0.3)] backdrop-blur-xl lg:p-8"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.1 }}
@@ -58,43 +63,60 @@ export function DashboardSection({ historyRows, detailsById, defaultSelectedId }
           <div className="mt-6 grid gap-3">
             {visibleRows.map((row) => {
               const isSelected = selectedId === row.id;
+              const dna = dnaById[row.id];
+
               return (
                 <button
                   type="button"
                   key={row.id}
                   onClick={() => setSelectedId(row.id)}
-                  className={`relative grid gap-3 overflow-hidden rounded-[1.3rem] pl-6 pr-4 py-4 text-left transition-all duration-300 md:grid-cols-[1.2fr_repeat(3,minmax(0,0.7fr))] md:items-center ${
+                  className={`relative overflow-hidden rounded-[1.3rem] pl-6 pr-4 py-4 text-left transition-all duration-300 ${
                     isSelected
                       ? 'border border-cyan-400/20 bg-cyan-400/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_10px_20px_rgba(0,0,0,0.2)]'
                       : 'border border-white/5 bg-white/[0.02] hover:border-white/10 hover:bg-white/[0.04]'
                   }`}
                 >
-                  {/* Highlight bar on the left edge if selected */}
                   {isSelected && (
                     <motion.div
                       layoutId="selectionIndicator"
-                      className="absolute left-0 top-0 bottom-0 w-1.5 bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.8)]"
+                      className="absolute bottom-0 left-0 top-0 w-1.5 bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.8)]"
                       initial={false}
                       transition={{ duration: 0.3, ease: 'easeOut' }}
                     />
                   )}
-                  
-                  <div>
-                    <div className="text-[0.95rem] font-semibold text-white/90">{row.title}</div>
-                    <div className="mt-1 font-mono text-[0.8rem] text-zinc-500">{row.subtitle} 开始</div>
+
+                  <div className="grid gap-3 md:grid-cols-[1.2fr_repeat(3,minmax(0,0.7fr))] md:items-center">
+                    <div>
+                      <div className="text-[0.95rem] font-semibold text-white/90">{row.title}</div>
+                      <div className="mt-1 font-mono text-[0.8rem] text-zinc-500">{row.subtitle} 开始</div>
+                    </div>
+                    <div>
+                      <div className="mb-1 text-[0.68rem] uppercase tracking-[0.12em] text-zinc-500">配速</div>
+                      <div className="font-mono text-sm font-semibold text-white/90">{row.pace}</div>
+                    </div>
+                    <div>
+                      <div className="mb-1 text-[0.68rem] uppercase tracking-[0.12em] text-zinc-500">时长</div>
+                      <div className="font-mono text-sm font-semibold text-oar-lime">{row.duration}</div>
+                    </div>
+                    <div>
+                      <div className="mb-1 text-[0.68rem] uppercase tracking-[0.12em] text-zinc-500">里程</div>
+                      <div className="font-mono text-sm font-semibold text-cyan-400">{row.distance}</div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-[0.68rem] uppercase tracking-[0.12em] text-zinc-500 mb-1">配速</div>
-                    <div className="font-mono text-sm font-semibold text-white/90">{row.pace}</div>
-                  </div>
-                  <div>
-                    <div className="text-[0.68rem] uppercase tracking-[0.12em] text-zinc-500 mb-1">时长</div>
-                    <div className="font-mono text-sm font-semibold text-oar-lime">{row.duration}</div>
-                  </div>
-                  <div>
-                    <div className="text-[0.68rem] uppercase tracking-[0.12em] text-zinc-500 mb-1">里程</div>
-                    <div className="font-mono text-sm font-semibold text-cyan-400">{row.distance}</div>
-                  </div>
+
+                  {dna ? (
+                    <div className="mt-3">
+                      <div className="mb-1.5 flex items-center justify-between text-[0.68rem] tracking-[0.08em] text-zinc-500">
+                        <span>训练 DNA</span>
+                        <span className="text-zinc-600">{dna.rhythmLabel}</span>
+                      </div>
+                      <div className={`flex h-2.5 w-full overflow-hidden rounded-full transition-all duration-300 ${isSelected ? 'shadow-[0_0_8px_rgba(34,211,238,0.2)]' : ''}`}>
+                        {dna.segments.map((segment) => (
+                          <div key={segment.index} className="flex-1" style={{ backgroundColor: segment.color }} />
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
                 </button>
               );
             })}
@@ -126,7 +148,7 @@ export function DashboardSection({ historyRows, detailsById, defaultSelectedId }
         </motion.section>
 
         <motion.aside
-          className="rounded-[2.2rem] border border-white/5 bg-zinc-900/30 p-6 lg:p-8 backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_15px_40px_rgba(0,0,0,0.3)] flex flex-col"
+          className="flex flex-col rounded-[2.2rem] border border-white/5 bg-zinc-900/30 p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_15px_40px_rgba(0,0,0,0.3)] backdrop-blur-xl lg:p-8"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.1 }}
@@ -144,28 +166,28 @@ export function DashboardSection({ historyRows, detailsById, defaultSelectedId }
             )}
           </div>
 
-          <div className="mt-6 flex-1 flex flex-col rounded-[1.6rem] border border-white/5 bg-black/20 p-5 shadow-inner">
+          <div className="mt-6 flex flex-1 flex-col rounded-[1.6rem] border border-white/5 bg-black/20 p-5 shadow-inner">
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-[1.2rem] border border-white/5 bg-black/30 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)] transition-colors hover:bg-black/40">
                 <div className="text-[0.68rem] uppercase tracking-[0.14em] text-zinc-500">平均配速</div>
-                <div className="mt-2 text-xl font-bold font-mono text-white/90">{detail?.averagePace}</div>
+                <div className="mt-2 font-mono text-xl font-bold text-white/90">{detail?.averagePace}</div>
               </div>
               <div className="rounded-[1.2rem] border border-white/5 bg-black/30 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)] transition-colors hover:bg-black/40">
                 <div className="text-[0.68rem] uppercase tracking-[0.14em] text-zinc-500">平均速度</div>
-                <div className="mt-2 text-xl font-bold font-mono text-white/90">{detail?.averageSpeed}</div>
+                <div className="mt-2 font-mono text-xl font-bold text-white/90">{detail?.averageSpeed}</div>
               </div>
               <div className="rounded-[1.2rem] border border-white/5 bg-black/30 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)] transition-colors hover:bg-black/40">
                 <div className="text-[0.68rem] uppercase tracking-[0.14em] text-zinc-500">平均桨频</div>
-                <div className="mt-2 text-xl font-bold font-mono text-white/90">{detail?.averageRpm}</div>
+                <div className="mt-2 font-mono text-xl font-bold text-white/90">{detail?.averageRpm}</div>
               </div>
               <div className="rounded-[1.2rem] border border-white/5 bg-black/30 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)] transition-colors hover:bg-black/40">
                 <div className="text-[0.68rem] uppercase tracking-[0.14em] text-zinc-500">总桨次</div>
-                <div className="mt-2 text-xl font-bold font-mono text-white/90">{detail?.totalTurns}</div>
+                <div className="mt-2 font-mono text-xl font-bold text-white/90">{detail?.totalTurns}</div>
               </div>
             </div>
 
-            <div className="mt-5 h-[220px] rounded-[1.4rem] border border-cyan-400/10 bg-[linear-gradient(180deg,rgba(12,26,36,0.6),rgba(7,18,26,0.8))] p-4 shadow-[inset_0_2px_20px_rgba(0,0,0,0.5)] flex flex-col">
-              <div className="text-[0.68rem] uppercase tracking-[0.12em] text-cyan-300/60 font-medium">速度与桨频趋势图</div>
+            <div className="mt-5 flex h-[220px] flex-col rounded-[1.4rem] border border-cyan-400/10 bg-[linear-gradient(180deg,rgba(12,26,36,0.6),rgba(7,18,26,0.8))] p-4 shadow-[inset_0_2px_20px_rgba(0,0,0,0.5)]">
+              <div className="text-[0.68rem] font-medium uppercase tracking-[0.12em] text-cyan-300/60">速度与桨频趋势图</div>
               <AnimatePresence mode="wait">
                 <motion.div
                   key={selectedId ?? 'empty'}
@@ -208,6 +230,40 @@ export function DashboardSection({ historyRows, detailsById, defaultSelectedId }
                 </motion.div>
               </AnimatePresence>
             </div>
+
+            {milestones.length > 0 ? (
+              <div className="mt-6">
+                <div className="mb-3 flex items-center gap-3">
+                  <div className="text-[0.75rem] font-semibold uppercase tracking-[0.16em] text-white/50">里程碑</div>
+                  <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
+                </div>
+                <div className="space-y-3">
+                  {visibleMilestones.map((milestone) => (
+                    <div key={milestone.id} className="flex items-start gap-3">
+                      <div className="flex flex-col items-center">
+                        <div className={`mt-1 h-3 w-3 rounded-sm ${milestone.achieved ? 'bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.4)]' : 'border border-zinc-600 bg-transparent'}`} />
+                        <div className="mt-1 h-full w-px bg-white/10" />
+                      </div>
+                      <div className="flex min-w-0 flex-1 items-center justify-between gap-4 rounded-[1rem] border border-white/5 bg-black/20 px-3 py-2.5">
+                        <div className={`text-sm ${milestone.achieved ? 'text-white/80' : 'text-zinc-500'}`}>{milestone.label}</div>
+                        <div className={`font-mono text-xs ${milestone.achieved ? 'text-zinc-500' : 'text-zinc-600 italic'}`}>
+                          {milestone.achieved ? milestone.achievedDate : milestone.predictedDate ? `预计 ${milestone.predictedDate}` : '待解锁'}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {milestones.length > 4 ? (
+                  <button
+                    type="button"
+                    onClick={() => setExpandedMilestones((value) => !value)}
+                    className="mt-3 text-xs tracking-[0.08em] text-zinc-500 transition-colors hover:text-white"
+                  >
+                    {expandedMilestones ? '收起' : '展开全部'}
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
           </div>
         </motion.aside>
       </div>

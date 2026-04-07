@@ -37,6 +37,7 @@ export interface WorkoutHistoryRowView {
   duration: string;
   distance: string;
   energy: string;
+  rawRecord: MokeWorkoutRecord;
 }
 
 export interface DashboardDataView {
@@ -54,6 +55,7 @@ export function buildDashboardData(records: MokeWorkoutRecord[], totals: MokeWor
     duration: record.formattedDuration,
     distance: record.formattedDistance,
     energy: `${Math.round(record.sumCalorie)} kcal`,
+    rawRecord: record,
   }));
 
   return {

@@ -28,7 +28,7 @@ describe('buildPosterHeroData', () => {
     expect(result.averageRpm).toBe('33.00');
     expect(result.totalTurns).toBe('439');
     expect(result.calorie).toEqual({ value: 212, goal: 200 });
-    expect(result.duration).toEqual({ value: 891, goal: 900 });
+    expect(result.duration).toEqual({ value: 891, goal: 720 });
     expect(result.distance).toEqual({ value: 2890, goal: 3000 });
   });
 });
