@@ -3,17 +3,15 @@ import { FitnessRings } from '../src/components/fitness-rings';
 import { MacroOverviewSection } from '../src/components/macro-overview';
 import { PosterHero } from '../src/components/poster-hero';
 import { TrendSection } from '../src/components/trend-section';
-import { VoyageSection } from '../src/components/voyage-section';
 import { getAllHistoryRecords, getCachedWorkoutArtifacts, getTodayTotalsFromUpstream, toHeatmapEntries, toRecentHistoryRecords } from '../src/lib/moke/cache-service';
 import { formatDistanceKm } from '../src/lib/moke/formatters';
 import { buildCalendarHeatmap, buildTrendCards } from '../src/lib/oarboard/calendar-data';
 import { buildDashboardData, buildWorkoutDetailPanel } from '../src/lib/oarboard/dashboard-data';
 import { buildDnaMap } from '../src/lib/oarboard/dna-data';
 import { buildFitnessFatigueData } from '../src/lib/oarboard/fitness-fatigue-data';
-import { buildMilestones, buildStreakData } from '../src/lib/oarboard/milestones-data';
+import { buildMilestones } from '../src/lib/oarboard/milestones-data';
 import { buildTodayPosterHeroData } from '../src/lib/oarboard/poster-data';
 import { buildTimeMachineEntry } from '../src/lib/oarboard/time-machine-data';
-import { buildVoyageProgress } from '../src/lib/oarboard/voyage-data';
 import type { DnaFingerprint } from '../src/lib/oarboard/dna-data';
 import type { MokeWorkoutRecord, MokeWorkoutTotalsResponse } from '../src/lib/moke/types';
 
@@ -94,10 +92,8 @@ export default async function HomePage() {
   const recordsForAnalysis = allHistoryRecords.length > 0 ? allHistoryRecords : historyRecords;
   const todayRecords = recordsForAnalysis.filter((record) => record.day === today);
   const dnaById = serializeDnaMap(historyRecords);
-  const streak = buildStreakData(recordsForAnalysis, today);
   const milestones = buildMilestones(recordsForAnalysis, summaryTotals.totalDistance, today);
   const fitnessFatigue = buildFitnessFatigueData(recordsForAnalysis, today);
-  const voyage = buildVoyageProgress(summaryTotals.totalDistance);
   const timeMachineEntry = buildTimeMachineEntry(recordsForAnalysis, todayRecords, today);
   const historyById = mapById(recordsForAnalysis);
 
@@ -223,9 +219,7 @@ export default async function HomePage() {
             </div>
           ) : null}
 
-          <MacroOverviewSection heatmap={heatmap} lifetimeRaw={lifetimeRaw} streak={streak} fitnessFatigue={fitnessFatigue} />
-
-          <VoyageSection voyage={voyage} />
+          <MacroOverviewSection heatmap={heatmap} lifetimeRaw={lifetimeRaw} fitnessFatigue={fitnessFatigue} />
 
           <TrendSection weekCards={weekCards} monthCards={monthCards} yearCards={yearCards} />
 

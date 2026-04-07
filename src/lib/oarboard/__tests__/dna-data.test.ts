@@ -37,6 +37,7 @@ describe('buildDnaFingerprint', () => {
     expect(result.segments[3]).toMatchObject({ index: 3, value: 1, color: '#ecfccb' });
     expect(result.rhythmType).toBe('negative-split');
     expect(result.rhythmLabel).toBe('渐入佳境');
+    expect(result.tags).toEqual(['渐入佳境', '节奏稳定', '高桨频推进', '后程发力']);
   });
 
   it('returns unknown when there is no usable pace data', () => {

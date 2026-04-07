@@ -34,6 +34,11 @@ export function DashboardSection({ historyRows, detailsById, dnaById, milestones
   const [selectedId, setSelectedId] = React.useState(defaultSelectedId);
   const [page, setPage] = React.useState(0);
   const [expandedMilestones, setExpandedMilestones] = React.useState(false);
+
+  React.useEffect(() => {
+    setSelectedId(defaultSelectedId);
+  }, [defaultSelectedId]);
+
   const detail = (selectedId && detailsById[selectedId]) || (defaultSelectedId ? detailsById[defaultSelectedId] : undefined);
 
   const totalPages = Math.max(1, Math.ceil(historyRows.length / PAGE_SIZE));
@@ -76,18 +81,13 @@ export function DashboardSection({ historyRows, detailsById, dnaById, milestones
                       : 'border-white/5 bg-[linear-gradient(180deg,rgba(255,255,255,0.025),rgba(255,255,255,0.015))] hover:border-white/10 hover:bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))]'
                   }`}
                 >
-                  <div className="pointer-events-none absolute inset-y-3 left-2.5 flex items-center">
-                    <motion.div
-                      layoutId="selectionIndicator"
-                      className={`h-[calc(100%-0.75rem)] rounded-full transition-all duration-300 ${
-                        isSelected
-                          ? 'w-px bg-cyan-300/90 shadow-[0_0_10px_rgba(34,211,238,0.65)]'
-                          : 'w-px bg-white/0'
-                      }`}
-                      initial={false}
-                      transition={{ duration: 0.26, ease: 'easeOut' }}
-                    />
-                  </div>
+                  <div
+                    className={`pointer-events-none absolute inset-y-3 left-2.5 w-px rounded-full transition-all duration-200 ${
+                      isSelected
+                        ? 'bg-cyan-300/95 shadow-[0_0_10px_rgba(34,211,238,0.65)] opacity-100'
+                        : 'bg-transparent opacity-0'
+                    }`}
+                  />
 
                   <div className="grid gap-3 md:grid-cols-[minmax(0,1.25fr)_repeat(3,minmax(5.2rem,0.72fr))] md:items-center md:gap-4">
                     <div className="min-w-0 pr-2">
@@ -109,19 +109,23 @@ export function DashboardSection({ historyRows, detailsById, dnaById, milestones
                   </div>
 
                   {dna ? (
-                    <div className="mt-3.5 rounded-[0.95rem] border border-white/5 bg-black/15 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
+                    <div className="mt-3.5 rounded-[0.95rem] border border-white/5 bg-black/15 px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
                       <div className="mb-2 flex items-center justify-between gap-3">
-                        <span className="text-[0.63rem] uppercase tracking-[0.18em] text-zinc-600">DNA</span>
-                        <span className={`font-mono text-[0.64rem] tracking-[0.14em] ${isSelected ? 'text-cyan-200/70' : 'text-zinc-600'}`}>{dna.rhythmLabel}</span>
+                        <span className="text-[0.63rem] uppercase tracking-[0.18em] text-zinc-600">训练标签</span>
+                        <span className={`text-[0.64rem] tracking-[0.12em] ${isSelected ? 'text-cyan-200/70' : 'text-zinc-500'}`}>{dna.rhythmLabel}</span>
                       </div>
-                      <div className={`relative flex h-3 w-full overflow-hidden rounded-full border border-white/5 bg-black/30 p-[2px] transition-all duration-300 ${isSelected ? 'shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_0_10px_rgba(34,211,238,0.08)]' : 'shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]'}`}>
-                        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0))] opacity-70" />
-                        {dna.segments.map((segment) => (
-                          <div
-                            key={segment.index}
-                            className="relative h-full flex-1 first:rounded-l-full last:rounded-r-full after:absolute after:inset-y-0 after:right-0 after:w-px after:bg-black/20 last:after:hidden"
-                            style={{ backgroundColor: segment.color }}
-                          />
+                      <div className="flex flex-wrap gap-1.5">
+                        {dna.tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className={`rounded-full border px-2.5 py-1 text-[0.66rem] tracking-[0.08em] ${
+                              isSelected
+                                ? 'border-cyan-400/18 bg-cyan-400/[0.1] text-cyan-100/88'
+                                : 'border-white/6 bg-white/[0.03] text-zinc-300'
+                            }`}
+                          >
+                            {tag}
+                          </span>
                         ))}
                       </div>
                     </div>

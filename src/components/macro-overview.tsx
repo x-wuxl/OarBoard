@@ -14,7 +14,6 @@ import {
   type HeatmapCellView,
 } from '../lib/oarboard/calendar-data';
 import type { FitnessFatigueData } from '../lib/oarboard/fitness-fatigue-data';
-import type { StreakData } from '../lib/oarboard/milestones-data';
 
 interface LifetimeStatsProps {
   totalDurationRaw: number;
@@ -26,13 +25,11 @@ interface LifetimeStatsProps {
 export interface MacroOverviewProps {
   heatmap: HeatmapCellView[];
   lifetimeRaw: LifetimeStatsProps;
-  streak: StreakData;
   fitnessFatigue: FitnessFatigueData;
 }
 
 type HeatmapMode = 'rolling' | number;
 type PanelMode = 'heatmap' | 'fitness';
-
 type TooltipPlacement = 'top' | 'bottom' | 'right' | 'left';
 
 const palette = [
@@ -44,9 +41,9 @@ const palette = [
   'bg-[#56d468]',
 ] as const;
 
-const metricCardClass = 'flex min-h-[130px] flex-col justify-between rounded-[1.5rem] border border-white/6 bg-[linear-gradient(180deg,rgba(10,14,20,0.86),rgba(7,10,16,0.74))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),inset_0_-18px_40px_rgba(0,0,0,0.18)] transition-all duration-300 hover:border-white/8 hover:bg-[linear-gradient(180deg,rgba(12,16,22,0.9),rgba(8,11,18,0.78))] lg:min-h-[145px] lg:p-5';
-const metricLabelClass = 'text-[0.68rem] font-medium tracking-[0.14em] text-zinc-500';
-const metricValueClass = 'font-mono text-[2.1rem] font-extrabold tracking-[-0.04em] text-white/96 lg:text-[2.6rem]';
+const metricCardClass = 'flex min-h-[130px] flex-col justify-between rounded-[1.4rem] border border-white/5 bg-black/30 p-4 shadow-inner transition-colors hover:bg-black/40 lg:min-h-[145px] lg:p-5';
+const metricLabelClass = 'text-[0.68rem] font-medium tracking-[0.12em] text-zinc-500';
+const metricValueClass = 'font-mono text-3xl font-extrabold tracking-tight text-white/95 lg:text-4xl';
 
 interface HoveredHeatmapCell {
   date: string;
@@ -64,25 +61,13 @@ function getTooltipPosition(rect: DOMRect, tooltipRect: DOMRect, placement: Tool
 
   switch (placement) {
     case 'top':
-      return {
-        top: rect.top - tooltipRect.height - gap,
-        left: centeredLeft,
-      };
+      return { top: rect.top - tooltipRect.height - gap, left: centeredLeft };
     case 'bottom':
-      return {
-        top: rect.bottom + gap,
-        left: centeredLeft,
-      };
+      return { top: rect.bottom + gap, left: centeredLeft };
     case 'right':
-      return {
-        top: centeredTop,
-        left: rect.right + gap,
-      };
+      return { top: centeredTop, left: rect.right + gap };
     case 'left':
-      return {
-        top: centeredTop,
-        left: rect.left - tooltipRect.width - gap,
-      };
+      return { top: centeredTop, left: rect.left - tooltipRect.width - gap };
   }
 }
 
@@ -105,11 +90,7 @@ function HeatmapTooltip({ cell }: { cell: HoveredHeatmapCell | null }) {
       const fitsHorizontally = position.left >= padding && position.left + tooltipRect.width <= viewportWidth - padding;
       const fitsVertically = position.top >= padding && position.top + tooltipRect.height <= viewportHeight - padding;
 
-      return {
-        ...position,
-        placement,
-        fits: fitsHorizontally && fitsVertically,
-      };
+      return { ...position, placement, fits: fitsHorizontally && fitsVertically };
     });
 
     const preferredPosition = positionedCandidates.find((candidate) => candidate.fits) ?? positionedCandidates[0];
@@ -134,44 +115,15 @@ function HeatmapTooltip({ cell }: { cell: HoveredHeatmapCell | null }) {
   );
 }
 
-function StreakCard({ sportCount, streak }: { sportCount: number; streak: StreakData }) {
-  return (
-    <div className="flex min-h-[130px] flex-col rounded-[1.5rem] border border-white/6 bg-[linear-gradient(180deg,rgba(12,17,24,0.92),rgba(8,11,18,0.82))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),inset_0_-20px_40px_rgba(0,0,0,0.22)] transition-all duration-300 hover:border-white/8 lg:min-h-[145px] lg:p-5">
-      <div className="flex items-center justify-between gap-3">
-        <span className={metricLabelClass}>总训练次数</span>
-        <Activity className="h-3.5 w-3.5 stroke-[1.8] text-white/55" />
-      </div>
-      <div className="mt-4 flex items-end gap-1.5">
-        <span className={metricValueClass}>
-          <AnimatedNumber value={sportCount} decimals={0} />
-        </span>
-        <span className="mb-1 font-mono text-[0.72rem] tracking-[0.18em] text-zinc-500">次</span>
-      </div>
-      <div className="mt-auto rounded-[1.1rem] border border-white/6 bg-black/28 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-        <div className="flex items-end justify-between gap-3 border-b border-white/6 pb-2.5">
-          <div>
-            <div className="text-[0.62rem] font-medium tracking-[0.16em] text-zinc-600">当前连续</div>
-            <div className="mt-1 flex items-end gap-1 font-mono text-cyan-200/92">
-              <span className={`text-xl font-extrabold tracking-[-0.04em] ${streak.isAtRecord ? 'animate-pulse' : ''}`}>{streak.currentStreak}</span>
-              <span className="mb-0.5 text-[0.7rem] tracking-[0.16em] text-cyan-200/60">周</span>
-            </div>
-          </div>
-          <div className="rounded-full border border-cyan-400/15 bg-cyan-400/8 px-2 py-0.5 text-[0.58rem] font-medium tracking-[0.18em] text-cyan-100/60">
-            STREAK
-          </div>
-        </div>
-        <div className="mt-2.5 flex items-center justify-between text-[0.68rem] tracking-[0.12em] text-zinc-600">
-          <span>历史最长</span>
-          <span className="font-mono text-zinc-400">{streak.longestStreak} 周</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function FitnessPanel({ fitnessFatigue, statusTone }: { fitnessFatigue: FitnessFatigueData; statusTone: string }) {
   return (
-    <motion.div key="fitness" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-1 flex-col rounded-[1.45rem] border border-white/5 bg-black/18 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+    <motion.div
+      key="fitness"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="flex min-h-[20rem] flex-1 flex-col rounded-[1.45rem] border border-white/5 bg-black/18 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] lg:min-h-[21.5rem]"
+    >
       <div className="h-[250px] rounded-[1.3rem] border border-white/6 bg-[linear-gradient(180deg,rgba(9,18,25,0.88),rgba(6,12,18,0.94))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),inset_0_-18px_32px_rgba(0,0,0,0.28)]">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={fitnessFatigue.points} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
@@ -219,7 +171,7 @@ function FitnessPanel({ fitnessFatigue, statusTone }: { fitnessFatigue: FitnessF
   );
 }
 
-export function MacroOverviewSection({ heatmap, lifetimeRaw, streak, fitnessFatigue }: MacroOverviewProps) {
+export function MacroOverviewSection({ heatmap, lifetimeRaw, fitnessFatigue }: MacroOverviewProps) {
   const [heatmapMode, setHeatmapMode] = React.useState<HeatmapMode>('rolling');
   const [panelMode, setPanelMode] = React.useState<PanelMode>('heatmap');
   const [hoveredCell, setHoveredCell] = React.useState<HoveredHeatmapCell | null>(null);
@@ -284,47 +236,58 @@ export function MacroOverviewSection({ heatmap, lifetimeRaw, streak, fitnessFati
         <div className="relative grid items-stretch gap-6 lg:grid-cols-[minmax(340px,0.85fr)_minmax(0,1.15fr)] xl:grid-cols-[minmax(420px,0.95fr)_minmax(0,1.2fr)]">
           <div className="grid min-w-0 grid-cols-2 gap-3 lg:gap-4">
             <div className={metricCardClass}>
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <Route className="h-4.5 w-4.5 stroke-2 text-cyan-400" />
                 <span className={metricLabelClass}>总运动距离</span>
-                <Route className="h-3.5 w-3.5 stroke-[1.8] text-cyan-300/60" />
               </div>
-              <div className="mt-auto flex items-end gap-1.5 pt-3">
+              <div className="mt-auto flex items-baseline gap-1.5 pt-2">
                 <span className={metricValueClass}>
                   <AnimatedNumber value={lifetimeRaw.totalDistanceRaw} decimals={0} />
                 </span>
-                <span className="mb-1 font-mono text-[0.72rem] uppercase tracking-[0.18em] text-zinc-500">km</span>
+                <span className="mb-0.5 font-mono text-sm text-zinc-500">km</span>
               </div>
             </div>
 
             <div className={metricCardClass}>
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <Timer className="h-4.5 w-4.5 stroke-2 text-lime-400" />
                 <span className={metricLabelClass}>总运动时长</span>
-                <Timer className="h-3.5 w-3.5 stroke-[1.8] text-lime-300/60" />
               </div>
-              <div className="mt-auto flex items-baseline pt-3 leading-none">
-                <span className="break-all font-mono text-[1.45rem] font-extrabold tracking-[-0.04em] text-white/96 lg:text-[1.8rem]">
+              <div className="mt-auto flex items-baseline pt-2 leading-none">
+                <span className="break-all font-mono text-[1.35rem] font-extrabold tracking-tight text-white/95 lg:text-[1.65rem]">
                   <AnimatedNumber value={lifetimeRaw.totalDurationRaw} isTime={true} />
                 </span>
               </div>
             </div>
 
             <div className={metricCardClass}>
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <Flame className="h-4.5 w-4.5 stroke-2 text-rose-500" />
                 <span className={metricLabelClass}>总消耗</span>
-                <Flame className="h-3.5 w-3.5 stroke-[1.8] text-rose-300/60" />
               </div>
-              <div className="mt-auto flex items-end gap-1.5 pt-3">
+              <div className="mt-auto flex items-baseline gap-1.5 pt-2">
                 <span className={metricValueClass}>
                   <AnimatedNumber value={lifetimeRaw.totalCaloriesRaw} decimals={0} />
                 </span>
-                <span className="mb-1 font-mono text-[0.72rem] uppercase tracking-[0.18em] text-zinc-500">kcal</span>
+                <span className="mb-0.5 font-mono text-sm text-zinc-500">kcal</span>
               </div>
             </div>
 
-            <StreakCard sportCount={lifetimeRaw.sportCount} streak={streak} />
+            <div className={metricCardClass}>
+              <div className="flex items-center gap-2.5">
+                <Activity className="h-4.5 w-4.5 stroke-2 text-white/90" />
+                <span className={metricLabelClass}>总训练次数</span>
+              </div>
+              <div className="mt-auto flex items-baseline gap-1.5 pt-2">
+                <span className={metricValueClass}>
+                  <AnimatedNumber value={lifetimeRaw.sportCount} decimals={0} />
+                </span>
+                <span className="mb-0.5 font-mono text-sm text-zinc-500">次</span>
+              </div>
+            </div>
           </div>
 
-          <div className="flex flex-col rounded-[1.7rem] border border-white/6 bg-[linear-gradient(180deg,rgba(8,12,18,0.9),rgba(6,9,14,0.78))] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),inset_0_-22px_48px_rgba(0,0,0,0.24)] lg:p-6">
+          <div className="flex min-h-[26.5rem] flex-col rounded-[1.7rem] border border-white/6 bg-[linear-gradient(180deg,rgba(8,12,18,0.9),rgba(6,9,14,0.78))] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),inset_0_-22px_48px_rgba(0,0,0,0.24)] lg:min-h-[28rem] lg:p-6">
             <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
               <div className="inline-flex rounded-full border border-white/6 bg-black/25 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-md">
                 {([
@@ -371,7 +334,13 @@ export function MacroOverviewSection({ heatmap, lifetimeRaw, streak, fitnessFati
 
             <AnimatePresence mode="wait">
               {panelMode === 'heatmap' ? (
-                <motion.div key="heatmap" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-1 flex-col rounded-[1.45rem] border border-white/5 bg-black/18 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                <motion.div
+                  key="heatmap"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex min-h-[20rem] flex-1 flex-col rounded-[1.45rem] border border-white/5 bg-black/18 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] lg:min-h-[21.5rem]"
+                >
                   <div className="flex flex-1 items-center overflow-x-auto pb-3 md:overflow-visible">
                     <div className="grid min-w-[680px] w-full gap-[4px]" style={{ gridTemplateColumns: desktopColumns }}>
                       {weekColumns.map((column) => (
