@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "test": "vitest run --environment node src/lib/moke/__tests__/*.test.ts",
+    "test": "vitest run --environment node src/lib/moke/__tests__",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

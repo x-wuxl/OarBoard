@@ -13,6 +13,7 @@ export interface DnaFingerprint {
   segments: DnaSegment[];
   rhythmType: RhythmType;
   rhythmLabel: string;
+  tags: string[];
 }
 
 export function valueToColor(t: number): string {
@@ -79,11 +80,47 @@ function classifyRhythm(values: number[]): { type: RhythmType; label: string } {
   return { type: 'positive-split', label: '前快后慢' };
 }
 
+function buildDnaTags(values: number[], rhythmLabel: string): string[] {
+  if (values.length === 0) return [];
+
+  const average = values.reduce((sum, value) => sum + value, 0) / values.length;
+  const variance = values.reduce((sum, value) => sum + (value - average) ** 2, 0) / values.length;
+  const cv = average !== 0 ? Math.sqrt(variance) / average : 0;
+
+  const tags = [rhythmLabel];
+  tags.push(cv <= 0.15 ? '节奏稳定' : '节奏起伏明显');
+  tags.push(average >= 26 ? '高桨频推进' : average >= 22 ? '巡航耐力' : '低桨频发力');
+
+  if (values.length >= 4) {
+    const firstHalf = values.slice(0, Math.floor(values.length / 2));
+    const secondHalf = values.slice(Math.floor(values.length / 2));
+    const firstHalfMean = firstHalf.reduce((sum, value) => sum + value, 0) / firstHalf.length;
+    const secondHalfMean = secondHalf.reduce((sum, value) => sum + value, 0) / secondHalf.length;
+
+    if (secondHalfMean - firstHalfMean > 1) {
+      tags.push('后程发力');
+    } else if (firstHalfMean - secondHalfMean > 1) {
+      tags.push('前程领先');
+    }
+  }
+
+  return tags.slice(0, 4);
+}
+
+function buildWorkoutTags(record: MokeWorkoutRecord, rhythmLabel: string): string[] {
+  const rpmValues = parseNumberSeries(record.rpmList).filter((v) => v > 0);
+  if (rpmValues.length === 0) {
+    return rhythmLabel === '数据不足' ? [] : [rhythmLabel];
+  }
+
+  return buildDnaTags(rpmValues, rhythmLabel);
+}
+
 export function buildDnaFingerprint(record: MokeWorkoutRecord): DnaFingerprint {
   const speeds = parseNumberSeries(record.paceList).filter((v) => v > 0);
 
   if (speeds.length === 0) {
-    return { segments: [], rhythmType: 'unknown', rhythmLabel: '数据不足' };
+    return { segments: [], rhythmType: 'unknown', rhythmLabel: '数据不足', tags: [] };
   }
 
   const min = Math.min(...speeds);
@@ -99,8 +136,9 @@ export function buildDnaFingerprint(record: MokeWorkoutRecord): DnaFingerprint {
   }));
 
   const { type: rhythmType, label: rhythmLabel } = classifyRhythm(speeds);
+  const tags = buildWorkoutTags(record, rhythmLabel);
 
-  return { segments, rhythmType, rhythmLabel };
+  return { segments, rhythmType, rhythmLabel, tags };
 }
 
 export function buildDnaMap(records: MokeWorkoutRecord[]): Map<string, DnaFingerprint> {
