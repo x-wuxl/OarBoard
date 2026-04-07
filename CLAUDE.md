@@ -12,7 +12,7 @@ OarBoard is a personal rowing dashboard built on Next.js 16 (App Router) that vi
 npm run dev          # Start dev server (Turbopack) at localhost:3000
 npm run build        # Production build
 npm run typecheck    # TypeScript strict check (tsc --noEmit)
-npm run test         # Run all unit tests (vitest)
+npm run test         # Run all Vitest unit tests
 ```
 
 No linter or formatter is configured. TypeScript strict mode is the primary code quality gate.
@@ -47,14 +47,21 @@ Copy `.env.example` to `.env.local`. Required vars: `MOKE_ACCOUNT_ID`, `MOKE_AUT
 
 All tests are pure unit tests in Vitest (node environment). Test files live in `__tests__/` directories alongside their modules:
 - `src/lib/moke/__tests__/` — formatters, service transforms, proxy helpers, mock data
-- `src/lib/oarboard/__tests__/` — calendar, dashboard, poster, rings transforms
+- `src/lib/oarboard/__tests__/` — calendar, dashboard, poster, rings, time-machine, milestones, fitness-fatigue, dna transforms
+
+`npm run test` runs the full Vitest unit test suite, including both `src/lib/moke/__tests__/` and `src/lib/oarboard/__tests__/`.
 
 No component or E2E tests exist.
+
+## Cache Behavior
+
+- The file-system cache (`.cache/moke/`) uses a 6 hour TTL for `summary.json` and `heatmap.json`.
+- After TTL expiry, refresh is incremental: start from `index.latestWorkoutDay`, include the current month window, and look back 7 days as a safety buffer.
+- If refresh fails but prior cache artifacts exist, the app falls back to the existing cache.
+- The cache does not persist on Vercel between deployments.
 
 ## Critical Warnings
 
 - **Do NOT restore deleted components** `lifetime-stats.tsx` or `calendar-first-section.tsx`. Their logic has been rewritten into `macro-overview.tsx` and `trend-section.tsx`.
 - **`calendar-data.ts` is fragile** — it contains complex date arithmetic for week boundaries and year heatmaps. Test thoroughly after any changes.
-- The file-system cache (`.cache/moke/`) has no TTL. It never expires unless manually deleted. This is a known limitation.
-- The cache does not persist on Vercel between deployments.
 - `sumMileage` from the API is in kilometers (not meters). Conversions multiply by 1000 before calling `formatDistanceKm`.
