@@ -207,3 +207,38 @@ describe('getCachedWorkoutArtifacts', () => {
     expect(writeWorkoutCache).not.toHaveBeenCalled();
   });
 });
+
+describe('getTodayRecordsFromUpstream', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('fetches and flattens today workout records', async () => {
+    const todayRecord = makeRecord({
+      _id: 'sport-today',
+      day: '2026-04-06',
+      startTime: '2026-04-06 08:00:00',
+      createTime: '2026-04-06T08:10:00.000Z',
+    });
+
+    fetchWorkoutList.mockResolvedValue({
+      code: 200,
+      data: [{ _id: '2026-04-06', dayData: [todayRecord] }],
+    } satisfies MokeWorkoutListResponse);
+
+    const { getTodayRecordsFromUpstream } = await import('../cache-service.js');
+    const result = await getTodayRecordsFromUpstream({ accountId: 'user-1', today: '2026-04-06' });
+
+    expect(fetchWorkoutList).toHaveBeenCalledWith({
+      accountId: 'user-1',
+      page: 1,
+      type: 3,
+      deviceType: 2,
+      condition: '2026-04-06',
+    }, {
+      authorization: undefined,
+      baseUrl: undefined,
+    });
+    expect(result).toEqual([todayRecord]);
+  });
+});

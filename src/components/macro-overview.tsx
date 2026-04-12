@@ -7,6 +7,7 @@ import { Activity, Flame, Route, Timer } from 'lucide-react';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 import { AnimatedNumber } from './animated-metrics';
+import { SectionIntro } from './section-intro';
 import {
   buildFullYearHeatmap,
   buildRollingYearHeatmap,
@@ -217,11 +218,12 @@ export function MacroOverviewSection({ heatmap, lifetimeRaw, fitnessFatigue }: M
   }[fitnessFatigue.status.level];
 
   return (
-    <section className="mt-8 lg:mt-10">
-      <div className="mb-4 flex items-center gap-3">
-        <div className="text-[0.75rem] font-semibold uppercase tracking-[0.16em] text-white/50">宏观概览</div>
-        <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
-      </div>
+    <section className="mt-6 lg:mt-8">
+      <SectionIntro
+        title="宏观概览"
+        description="从累计数据、热力图和状态面板查看整体训练节奏。"
+        className="mb-4"
+      />
 
       <motion.div
         className="relative overflow-hidden rounded-[2.2rem] border border-white/10 bg-zinc-900/30 p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_20px_60px_rgba(0,0,0,0.5)] backdrop-blur-xl lg:p-8"

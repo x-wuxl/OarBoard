@@ -105,7 +105,7 @@ export function buildStreakData(records: MokeWorkoutRecord[], today: string): St
 interface MilestoneTemplate {
   id: string;
   label: string;
-  type: 'distance' | 'sessions' | 'single';
+  type: 'distance' | 'sessions' | 'single' | 'monthly';
   threshold: number;
 }
 
@@ -120,6 +120,9 @@ function buildTemplates(): MilestoneTemplate[] {
   }
   for (const km of [3, 5]) {
     templates.push({ id: `single-${km}`, label: `单次突破 ${km} km`, type: 'single', threshold: km });
+  }
+  for (const km of [20]) {
+    templates.push({ id: `monthly-${km}`, label: `单月累计 ${km} km`, type: 'monthly', threshold: km });
   }
 
   return templates;
@@ -145,6 +148,7 @@ export function buildMilestones(
   const distanceAchievements = computeDistanceAchievements(sorted);
   const sessionAchievements = computeSessionAchievements(sorted);
   const singleAchievements = computeSingleSessionAchievements(sorted);
+  const monthlyAchievements = computeMonthlyDistanceAchievements(sorted);
 
   // Daily rate for predictions (last 30 days)
   const dailyRate = computeDailyRate(sorted, today);
@@ -161,6 +165,8 @@ export function buildMilestones(
       achievedDate = sessionAchievements.get(tpl.threshold) ?? null;
     } else if (tpl.type === 'single') {
       achievedDate = singleAchievements.get(tpl.threshold) ?? null;
+    } else if (tpl.type === 'monthly') {
+      achievedDate = monthlyAchievements.get(tpl.threshold) ?? null;
     }
 
     if (achievedDate) {
@@ -190,9 +196,7 @@ export function buildMilestones(
   // Achieved: most recent first
   achieved.sort((a, b) => (a.achievedDate! > b.achievedDate! ? -1 : a.achievedDate! < b.achievedDate! ? 1 : 0));
 
-  // Unachieved: lowest threshold first (already in template order which is ascending)
-  // Show all achieved + next 2 unachieved
-  return [...achieved, ...unachieved.slice(0, 2)];
+  return [...achieved, ...selectUpcomingMilestones(unachieved)];
 }
 
 // ---------------------------------------------------------------------------
@@ -248,6 +252,44 @@ function computeSingleSessionAchievements(sorted: MokeWorkoutRecord[]): Map<numb
   }
 
   return achievements;
+}
+
+function computeMonthlyDistanceAchievements(sorted: MokeWorkoutRecord[]): Map<number, string> {
+  const thresholds = [20];
+  const achievements = new Map<number, string>();
+  const runningDistanceByMonth = new Map<string, number>();
+
+  for (const record of sorted) {
+    const monthDistance = (runningDistanceByMonth.get(record.month) ?? 0) + record.sumMileage;
+    runningDistanceByMonth.set(record.month, monthDistance);
+
+    for (const km of thresholds) {
+      if (!achievements.has(km) && monthDistance >= km) {
+        achievements.set(km, record.day);
+      }
+    }
+
+    if (achievements.size >= thresholds.length) {
+      break;
+    }
+  }
+
+  return achievements;
+}
+
+function selectUpcomingMilestones(unachieved: MilestoneView[]): MilestoneView[] {
+  const upcomingByType = new Map<string, MilestoneView>();
+
+  for (const milestone of unachieved) {
+    const type = milestone.id.split('-')[0];
+    if (!upcomingByType.has(type)) {
+      upcomingByType.set(type, milestone);
+    }
+  }
+
+  return ['single', 'monthly', 'distance', 'sessions']
+    .map((type) => upcomingByType.get(type))
+    .filter((milestone): milestone is MilestoneView => milestone !== undefined);
 }
 
 // ---------------------------------------------------------------------------

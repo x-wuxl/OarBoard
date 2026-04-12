@@ -3,17 +3,25 @@ import { FitnessRings } from '../src/components/fitness-rings';
 import { MacroOverviewSection } from '../src/components/macro-overview';
 import { PosterHero } from '../src/components/poster-hero';
 import { TrendSection } from '../src/components/trend-section';
-import { getAllHistoryRecords, getCachedWorkoutArtifacts, getTodayTotalsFromUpstream, toHeatmapEntries, toRecentHistoryRecords } from '../src/lib/moke/cache-service';
-import { formatDistanceKm } from '../src/lib/moke/formatters';
+import {
+  getAllHistoryRecords,
+  getCachedWorkoutArtifacts,
+  getTodayRecordsFromUpstream,
+  getTodayTotalsFromUpstream,
+  toHeatmapEntries,
+  toRecentHistoryRecords,
+} from '../src/lib/moke/cache-service';
+import { formatDistanceKm, formatDuration } from '../src/lib/moke/formatters';
 import { buildCalendarHeatmap, buildTrendCards } from '../src/lib/oarboard/calendar-data';
 import { buildDashboardData, buildWorkoutDetailPanel } from '../src/lib/oarboard/dashboard-data';
 import { buildDnaMap } from '../src/lib/oarboard/dna-data';
 import { buildFitnessFatigueData } from '../src/lib/oarboard/fitness-fatigue-data';
 import { buildMilestones } from '../src/lib/oarboard/milestones-data';
 import { buildTodayPosterHeroData } from '../src/lib/oarboard/poster-data';
+import { addMissingWorkoutTotals, mergeWorkoutRecords, summarizeWorkoutTotals } from '../src/lib/oarboard/today-data';
 import { buildTimeMachineEntry } from '../src/lib/oarboard/time-machine-data';
 import type { DnaFingerprint } from '../src/lib/oarboard/dna-data';
-import type { MokeWorkoutRecord, MokeWorkoutTotalsResponse } from '../src/lib/moke/types';
+import type { MokeWorkoutRecord, MokeWorkoutTotals, MokeWorkoutTotalsResponse } from '../src/lib/moke/types';
 
 function mapById<T extends { _id: string }>(items: T[]): Record<string, T> {
   return Object.fromEntries(items.map((item) => [item._id, item]));
@@ -46,6 +54,34 @@ function getWeekRange(): { start: string; end: string } {
   const end = new Date(start);
   end.setDate(start.getDate() + 6);
   return { start: fmtDate(start), end: fmtDate(end) };
+}
+
+function formatMonthDay(day: string): string {
+  const date = new Date(`${day}T00:00:00`);
+  if (Number.isNaN(date.getTime())) {
+    return day;
+  }
+
+  return `${date.getMonth() + 1} 月 ${date.getDate()} 日`;
+}
+
+function getNextDistanceMilestone(totalDistanceKm: number, milestones: Array<{ id: string; label: string; achieved: boolean }>) {
+  const distanceMilestone = milestones.find((milestone) => !milestone.achieved && milestone.id.startsWith('distance-'));
+  const targetKm = distanceMilestone ? Number(distanceMilestone.id.replace('distance-', '')) : Math.ceil(totalDistanceKm / 100) * 100 || 50;
+
+  return {
+    label: `${targetKm} km`,
+    targetKm,
+  };
+}
+
+function zeroTotals(): MokeWorkoutTotals {
+  return {
+    totalDistance: 0,
+    totalCalorie: 0,
+    totalDuration: 0,
+    sportCount: 0,
+  };
 }
 
 export default async function HomePage() {
@@ -81,21 +117,11 @@ export default async function HomePage() {
     }
   }
 
-  const summaryTotals = summary?.totals ?? {
-    totalDistance: 0,
-    totalCalorie: 0,
-    totalDuration: 0,
-    sportCount: 0,
-  };
-  const historyRecords = summary ? toRecentHistoryRecords(summary) : [];
-  const allHistoryRecords = accountId ? await getAllHistoryRecords(accountId).catch(() => historyRecords) : historyRecords;
-  const recordsForAnalysis = allHistoryRecords.length > 0 ? allHistoryRecords : historyRecords;
-  const todayRecords = recordsForAnalysis.filter((record) => record.day === today);
-  const dnaById = serializeDnaMap(historyRecords);
-  const milestones = buildMilestones(recordsForAnalysis, summaryTotals.totalDistance, today);
-  const fitnessFatigue = buildFitnessFatigueData(recordsForAnalysis, today);
-  const timeMachineEntry = buildTimeMachineEntry(recordsForAnalysis, todayRecords, today);
-  const historyById = mapById(recordsForAnalysis);
+  const summaryTotals = summary?.totals ?? zeroTotals();
+  const cachedHistoryRecords = summary ? toRecentHistoryRecords(summary) : [];
+  const cachedAllHistoryRecords = accountId ? await getAllHistoryRecords(accountId).catch(() => cachedHistoryRecords) : cachedHistoryRecords;
+  const cachedRecordsForAnalysis = cachedAllHistoryRecords.length > 0 ? cachedAllHistoryRecords : cachedHistoryRecords;
+  const cachedTodayRecords = cachedRecordsForAnalysis.filter((record) => record.day === today);
 
   let todayTotals = emptyTotals;
 
@@ -110,10 +136,46 @@ export default async function HomePage() {
     }
   }
 
-  const hero = buildTodayPosterHeroData(todayRecords, today);
-  const hasWorkoutToday = (todayTotals.data.sportCount ?? 0) > 0 || todayRecords.length > 0;
+  let liveTodayRecords: MokeWorkoutRecord[] = [];
+  const expectedTodaySessions = todayTotals.data.sportCount ?? 0;
 
-  const dashboard = buildDashboardData(historyRecords, summaryTotals);
+  if (accountId && expectedTodaySessions > cachedTodayRecords.length) {
+    try {
+      liveTodayRecords = await getTodayRecordsFromUpstream({ accountId, authorization, baseUrl, today });
+    } catch (error) {
+      if (!authError) {
+        const message = error instanceof Error ? error.message : String(error);
+        authError = message.includes('401') ? 'MOKE_AUTHORIZATION may be expired. Update your token in the environment variables.' : message;
+      }
+    }
+  }
+
+  const historyRecords = mergeWorkoutRecords(cachedHistoryRecords, liveTodayRecords);
+  const recordsForAnalysis = mergeWorkoutRecords(cachedRecordsForAnalysis, liveTodayRecords);
+  const todayRecords = recordsForAnalysis.filter((record) => record.day === today);
+  const effectiveSummaryTotals = addMissingWorkoutTotals(summaryTotals, cachedRecordsForAnalysis, liveTodayRecords);
+  const dnaById = serializeDnaMap(historyRecords);
+  const milestones = buildMilestones(recordsForAnalysis, effectiveSummaryTotals.totalDistance, today);
+  const fitnessFatigue = buildFitnessFatigueData(recordsForAnalysis, today);
+  const timeMachineEntry = buildTimeMachineEntry(recordsForAnalysis, todayRecords, today);
+  const historyById = mapById(recordsForAnalysis);
+  const latestRecord = recordsForAnalysis[0] ?? null;
+
+  const hero = buildTodayPosterHeroData(todayRecords, today);
+  const hasWorkoutToday = expectedTodaySessions > 0 || todayRecords.length > 0;
+  const nextMilestone = getNextDistanceMilestone(effectiveSummaryTotals.totalDistance, milestones);
+  const emptyStateHero = latestRecord ? {
+    title: '今天还没开始运动',
+    subtitle: `下一个里程碑：${nextMilestone.label}`,
+    recentWorkout: `上次训练在 ${formatMonthDay(latestRecord.day)}，完成 ${formatDistanceKm(latestRecord.sumMileage * 1000)}，用时 ${formatDuration(latestRecord.sumDuration)}，消耗 ${Math.round(latestRecord.sumCalorie)} kcal`,
+    milestone: {
+      currentKm: effectiveSummaryTotals.totalDistance,
+      targetKm: nextMilestone.targetKm,
+      targetLabel: nextMilestone.label,
+    },
+  } : null;
+
+  const dashboard = buildDashboardData(historyRecords, effectiveSummaryTotals);
   const fallbackDetail = {
     title: today,
     subtitle: 'No workout data',
@@ -132,20 +194,12 @@ export default async function HomePage() {
   }
 
   const heatmap = buildCalendarHeatmap(heatmapArtifact ? toHeatmapEntries(heatmapArtifact) : []);
-  const recentMonths = summary?.recentMonths ?? [];
-  const currentMonthSummary = recentMonths.find((month) => month.month === currentMonth);
-  const currentYearSummary = recentMonths
-    .filter((month) => month.month.startsWith(`${new Date().getFullYear()}-`))
-    .reduce(
-      (acc, month) => {
-        acc.totalDistance += month.distance;
-        acc.totalCalorie += month.calorie;
-        acc.totalDuration += month.duration;
-        acc.sportCount += month.sportCount;
-        return acc;
-      },
-      { totalDistance: 0, totalCalorie: 0, totalDuration: 0, sportCount: 0 },
-    );
+  const currentMonthSummary = summarizeWorkoutTotals(
+    recordsForAnalysis.filter((record) => record.month === currentMonth),
+  );
+  const currentYearSummary = summarizeWorkoutTotals(
+    recordsForAnalysis.filter((record) => record.year === String(new Date().getFullYear())),
+  );
 
   const { start: weekStart, end: weekEnd } = getWeekRange();
   const thisWeekRecords = historyRecords.filter((r) => r.day >= weekStart && r.day <= weekEnd);
@@ -162,21 +216,14 @@ export default async function HomePage() {
   );
 
   const weekCards = buildTrendCards(currentWeekSummary);
-  const monthCards = buildTrendCards(currentMonthSummary
-    ? {
-        totalDistance: currentMonthSummary.distance,
-        totalCalorie: currentMonthSummary.calorie,
-        totalDuration: currentMonthSummary.duration,
-        sportCount: currentMonthSummary.sportCount,
-      }
-    : emptyTotals.data);
+  const monthCards = buildTrendCards(currentMonthSummary);
   const yearCards = buildTrendCards(currentYearSummary);
 
   const lifetimeRaw = {
-    totalDurationRaw: summaryTotals.totalDuration,
-    totalCaloriesRaw: summaryTotals.totalCalorie,
-    totalDistanceRaw: summaryTotals.totalDistance,
-    sportCount: summaryTotals.sportCount ?? 0,
+    totalDurationRaw: effectiveSummaryTotals.totalDuration,
+    totalCaloriesRaw: effectiveSummaryTotals.totalCalorie,
+    totalDistanceRaw: effectiveSummaryTotals.totalDistance,
+    sportCount: effectiveSummaryTotals.sportCount ?? 0,
   };
 
   return (
@@ -204,6 +251,7 @@ export default async function HomePage() {
             hasWorkout={hasWorkoutToday}
             ringData={{ calorie: hero.calorie, duration: hero.duration, distance: hero.distance }}
             timeMachineEntry={timeMachineEntry}
+            emptyState={emptyStateHero}
           >
             <FitnessRings
               calorie={hero.calorie}

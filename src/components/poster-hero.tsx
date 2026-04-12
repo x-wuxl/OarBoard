@@ -1,6 +1,19 @@
 import { AnimatedNumber, AnimatedProgressBar } from './animated-metrics';
 import type { TimeMachineEntry } from '../lib/oarboard/time-machine-data';
 
+interface EmptyStateMilestone {
+  currentKm: number;
+  targetKm: number;
+  targetLabel: string;
+}
+
+interface EmptyStateContent {
+  title: string;
+  subtitle: string;
+  recentWorkout: string;
+  milestone: EmptyStateMilestone;
+}
+
 interface PosterHeroProps {
   averagePace: string;
   averageRpm: string;
@@ -15,7 +28,46 @@ interface PosterHeroProps {
     distance: { value: number; goal: number };
   };
   timeMachineEntry?: TimeMachineEntry | null;
+  emptyState?: EmptyStateContent | null;
   children: React.ReactNode;
+}
+
+function MilestoneRing({ milestone }: { milestone: EmptyStateMilestone }) {
+  const radius = 72;
+  const circumference = 2 * Math.PI * radius;
+  const progress = milestone.targetKm > 0 ? Math.min(milestone.currentKm / milestone.targetKm, 1) : 0;
+  const dashOffset = circumference * (1 - progress);
+
+  return (
+    <div className="relative flex h-[14.75rem] w-[14.75rem] items-center justify-center lg:h-[16rem] lg:w-[16rem]">
+      <svg viewBox="0 0 180 180" className="h-full w-full -rotate-90">
+        <circle cx="90" cy="90" r={radius} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="12" />
+        <circle
+          cx="90"
+          cy="90"
+          r={radius}
+          fill="none"
+          stroke="#4ed8ff"
+          strokeWidth="12"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={dashOffset}
+          style={{ filter: 'drop-shadow(0 0 16px rgba(78,216,255,0.35))', transition: 'stroke-dashoffset 500ms ease' }}
+        />
+      </svg>
+
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+        <div className="text-[0.68rem] tracking-[0.18em] text-zinc-500/80">下个里程碑</div>
+        <div className="mt-3 flex items-baseline gap-1 font-mono text-white">
+          <span className="text-4xl font-bold tracking-tight lg:text-[2.7rem]">
+            <AnimatedNumber value={milestone.currentKm} decimals={1} />
+          </span>
+          <span className="text-sm text-zinc-500/80">km</span>
+        </div>
+        <div className="mt-2 text-sm font-medium text-white/74">目标 {milestone.targetLabel}</div>
+      </div>
+    </div>
+  );
 }
 
 export function PosterHero({
@@ -28,6 +80,7 @@ export function PosterHero({
   hasWorkout,
   ringData,
   timeMachineEntry,
+  emptyState,
   children,
 }: PosterHeroProps) {
   const paceValue = averagePace.split('/')[0] || '--:--';
@@ -38,7 +91,7 @@ export function PosterHero({
     'rounded-[1.4rem] border border-white/5 bg-white/[0.02] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-colors duration-300 hover:bg-white/[0.03] lg:p-4.5';
 
   return (
-    <section className="py-7 lg:py-9">
+    <section className="pt-7 pb-2 lg:pt-9 lg:pb-3">
       <div className="relative overflow-hidden rounded-[2.1rem] border border-white/12 bg-[linear-gradient(180deg,rgba(18,24,34,0.9),rgba(18,24,34,0.72))] p-5 shadow-[0_24px_90px_rgba(0,0,0,0.34),inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-[30px] lg:p-7">
         <div className="pointer-events-none absolute inset-x-12 top-0 h-24 rounded-full bg-cyan-300/7 blur-3xl" />
         <div className="pointer-events-none absolute right-2 top-16 h-32 w-32 rounded-full bg-rose-400/7 blur-3xl" />
@@ -137,15 +190,29 @@ export function PosterHero({
               </div>
             ) : null}
           </div>
+        ) : emptyState ? (
+          <div className="relative grid gap-4 lg:grid-cols-[minmax(0,1.08fr)_auto] lg:items-center lg:gap-6">
+            <div className="p-1 lg:pr-1">
+              <div className="text-[0.72rem] uppercase tracking-[0.16em] text-oar-muted">Today</div>
+              <div className="mt-3 text-[1.9rem] font-semibold tracking-[0.01em] text-white lg:text-[2.35rem]">{emptyState.title}</div>
+              <div className="mt-3 inline-flex max-w-fit items-center rounded-full border border-cyan-300/14 bg-cyan-300/[0.08] px-4 py-2 text-[0.92rem] font-medium text-cyan-100/92 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] lg:text-base">
+                {emptyState.subtitle}
+              </div>
+              <div className="mt-4 max-w-[34rem] text-sm leading-7 text-white/68 lg:text-[0.98rem]">
+                {emptyState.recentWorkout}
+              </div>
+            </div>
+
+            <div className="flex justify-center px-1 py-1 lg:justify-end lg:px-0">
+              <MilestoneRing milestone={emptyState.milestone} />
+            </div>
+          </div>
         ) : (
           <div className="relative grid place-items-center py-10">
-            <div className="grid items-center gap-6 lg:grid-cols-[auto_1fr] lg:gap-10">
-              <div className="flex justify-center">{children}</div>
-              <div className="text-center lg:text-left">
-                <div className="text-[0.72rem] uppercase tracking-[0.16em] text-oar-muted">Today</div>
-                <div className="mt-3 text-xl font-semibold text-white/60">暂无运动记录</div>
-                <div className="mt-2 text-sm text-oar-muted">完成一次划船运动后，数据将在此展示</div>
-              </div>
+            <div className="text-center">
+              <div className="text-[0.72rem] uppercase tracking-[0.16em] text-oar-muted">Today</div>
+              <div className="mt-3 text-xl font-semibold text-white/60">今天还没有训练记录</div>
+              <div className="mt-2 text-sm text-oar-muted">完成一次运动后，这里会展示你的今日进度与里程碑。</div>
             </div>
           </div>
         )}

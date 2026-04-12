@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AnimatedNumber } from './animated-metrics';
+import { SectionIntro } from './section-intro';
 import type { TrendCardView } from '../lib/oarboard/calendar-data';
 
 interface TrendSectionProps {
@@ -24,32 +25,29 @@ export function TrendSection({ weekCards, monthCards, yearCards }: TrendSectionP
   const cards = mode === 'week' ? weekCards : mode === 'month' ? monthCards : yearCards;
 
   return (
-    <section className="mt-8 lg:mt-10">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between mb-5">
-        <div>
-          <h2 className="text-xl font-semibold tracking-[0.02em] text-white/90">阶段聚焦</h2>
-          <p className="mt-1 text-sm text-oar-muted">
-            按不同时间跨度追踪训练指标。
-          </p>
-        </div>
-
-        <div className="inline-flex rounded-full border border-white/5 bg-zinc-900/40 p-1 shadow-inner backdrop-blur-md">
-          {(['week', 'month', 'year'] as const).map((item) => (
-            <button
-              key={item}
-              type="button"
-              onClick={() => setMode(item)}
-              className={`rounded-full px-4 py-1.5 text-sm transition-all duration-300 ${
-                mode === item 
-                  ? 'bg-zinc-700/60 text-white shadow-[0_2px_8px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.1)]' 
-                  : 'text-zinc-500 hover:text-white hover:bg-white/[0.02]'
-              }`}
-            >
-              {filterLabels[item]}
-            </button>
-          ))}
-        </div>
-      </div>
+    <section className="mt-6 lg:mt-8">
+      <SectionIntro
+        title="阶段聚焦"
+        description="按不同时间跨度追踪训练指标。"
+        trailing={(
+          <div className="inline-flex rounded-full border border-white/5 bg-zinc-900/40 p-1 shadow-inner backdrop-blur-md">
+            {(['week', 'month', 'year'] as const).map((item) => (
+              <button
+                key={item}
+                type="button"
+                onClick={() => setMode(item)}
+                className={`rounded-full px-4 py-1.5 text-sm transition-all duration-300 ${
+                  mode === item
+                    ? 'bg-zinc-700/60 text-white shadow-[0_2px_8px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.1)]'
+                    : 'text-zinc-500 hover:text-white hover:bg-white/[0.02]'
+                }`}
+              >
+                {filterLabels[item]}
+              </button>
+            ))}
+          </div>
+        )}
+      />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {cards.map((card) => (

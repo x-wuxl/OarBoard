@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { SectionIntro } from './section-intro';
 
 import type { WorkoutHistoryRowView } from '../lib/oarboard/dashboard-data';
 import type { DnaFingerprint } from '../lib/oarboard/dna-data';
@@ -46,7 +47,7 @@ export function DashboardSection({ historyRows, detailsById, dnaById, milestones
   const visibleMilestones = expandedMilestones ? milestones : milestones.slice(0, 4);
 
   return (
-    <section className="mb-16 mt-8 lg:mt-12">
+    <section className="mb-16 mt-6 lg:mt-8">
       <div className="grid gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(22rem,0.9fr)]">
         <motion.section
           className="rounded-[2.2rem] border border-white/5 bg-zinc-900/30 p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_15px_40px_rgba(0,0,0,0.3)] backdrop-blur-xl lg:p-8"
@@ -55,15 +56,16 @@ export function DashboardSection({ historyRows, detailsById, dnaById, milestones
           viewport={{ once: true, amount: 0.1 }}
           transition={{ ...transition }}
         >
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h2 className="text-xl font-semibold tracking-[0.02em] text-white/90">历史记录</h2>
-              <p className="mt-1 text-sm text-oar-muted">浏览所有训练日志与配速细节</p>
-            </div>
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs tracking-widest text-zinc-400 shadow-inner">
-              共 {historyRows.length} 条
-            </span>
-          </div>
+          <SectionIntro
+            title="历史记录"
+            description="浏览所有训练日志与配速细节。"
+            className="flex items-end justify-between gap-4"
+            trailing={(
+              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs tracking-widest text-zinc-400 shadow-inner">
+                共 {historyRows.length} 条
+              </span>
+            )}
+          />
 
           <div className="mt-6 grid gap-2.5">
             {visibleRows.map((row) => {

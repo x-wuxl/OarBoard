@@ -222,6 +222,26 @@ export async function getTodayTotalsFromUpstream(input: {
   });
 }
 
+export async function getTodayRecordsFromUpstream(input: {
+  accountId: string;
+  authorization?: string;
+  baseUrl?: string;
+  today: string;
+}) {
+  const response = await fetchWorkoutList({
+    accountId: input.accountId,
+    page: 1,
+    type: 3,
+    deviceType: 2,
+    condition: input.today,
+  }, {
+    authorization: input.authorization,
+    baseUrl: input.baseUrl,
+  });
+
+  return dedupeRecords(flattenWorkoutGroups(response).filter((record) => record.day === input.today));
+}
+
 function dedupeRecords(records: MokeWorkoutRecord[]) {
   return [...new Map(records.map((record) => [record._id, record])).values()]
     .sort((a, b) => b.startTime.localeCompare(a.startTime));

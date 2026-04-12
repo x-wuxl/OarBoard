@@ -70,4 +70,48 @@ describe('buildMilestones', () => {
   it('returns an empty list when there are no records', () => {
     expect(buildMilestones([], 0, '2026-04-06')).toEqual([]);
   });
+
+  it('records the first day a monthly distance milestone is reached', () => {
+    const records = [
+      makeRecord('1', '2026-03-01', 6.5),
+      makeRecord('2', '2026-03-10', 6.8),
+      makeRecord('3', '2026-03-20', 7.1),
+    ];
+
+    const result = buildMilestones(records, 20.4, '2026-03-31');
+
+    expect(result).toContainEqual(
+      expect.objectContaining({
+        id: 'monthly-20',
+        achieved: true,
+        achievedDate: '2026-03-20',
+      }),
+    );
+  });
+
+  it('surfaces upcoming single-session and monthly milestones in the preview', () => {
+    const records = [
+      makeRecord('1', '2026-01-05', 4.2),
+      makeRecord('2', '2026-02-08', 4.8),
+      makeRecord('3', '2026-03-10', 4.4),
+      makeRecord('4', '2026-04-12', 4.9),
+      makeRecord('5', '2026-05-15', 4.6),
+      makeRecord('6', '2026-06-18', 4.7),
+    ];
+
+    const result = buildMilestones(records, 27.6, '2026-07-01');
+
+    expect(result).toContainEqual(
+      expect.objectContaining({
+        id: 'single-5',
+        achieved: false,
+      }),
+    );
+    expect(result).toContainEqual(
+      expect.objectContaining({
+        id: 'monthly-20',
+        achieved: false,
+      }),
+    );
+  });
 });
