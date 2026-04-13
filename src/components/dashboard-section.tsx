@@ -25,7 +25,7 @@ interface DashboardSectionProps {
   defaultSelectedId: string | null;
 }
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 5;
 const transition = {
   duration: 0.75,
   ease: [0.16, 1, 0.3, 1] as const,
