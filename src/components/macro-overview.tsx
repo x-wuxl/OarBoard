@@ -220,7 +220,7 @@ export function MacroOverviewSection({ heatmap, lifetimeRaw, fitnessFatigue }: M
   return (
     <section className="mt-6 lg:mt-8">
       <SectionIntro
-        title="宏观概览"
+        title="总体概览"
         description="从累计数据、热力图和状态面板查看整体训练节奏。"
         className="mb-4"
       />

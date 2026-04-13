@@ -121,6 +121,8 @@ describe('DashboardSection', () => {
       }),
     );
 
+    expect(markup).toContain('训练记录');
+    expect(markup).toContain('训练细节');
     expect(markup).toContain('Workout 1');
     expect(markup).toContain('Workout 5');
     expect(markup).not.toContain('Workout 6');

@@ -117,7 +117,7 @@ export function TrendSection({ weekCards, monthCards, yearCards }: TrendSectionP
   return (
     <section className="mt-6 lg:mt-8">
       <SectionIntro
-        title="阶段聚焦"
+        title="周期趋势"
         description="按不同时间跨度追踪训练指标。"
         trailing={(
           <div className="inline-flex rounded-full border border-white/5 bg-zinc-900/40 p-1 shadow-inner backdrop-blur-md">

@@ -125,6 +125,7 @@ describe('TrendSection', () => {
       }),
     );
 
+    expect(markup).toContain('周期趋势');
     expect(markup).toContain('周期距离');
     expect(markup).toContain('+8.2%');
     expect(markup).toContain('-4.3%');

@@ -57,7 +57,7 @@ export function DashboardSection({ historyRows, detailsById, dnaById, milestones
           transition={{ ...transition }}
         >
           <SectionIntro
-            title="历史记录"
+            title="训练记录"
             description="浏览所有训练日志与配速细节。"
             className="flex items-end justify-between gap-4"
             trailing={(
@@ -171,7 +171,7 @@ export function DashboardSection({ historyRows, detailsById, dnaById, milestones
         >
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h2 className="text-xl font-semibold tracking-[0.02em] text-white/90">微观细节</h2>
+              <h2 className="text-xl font-semibold tracking-[0.02em] text-white/90">训练细节</h2>
               <p className="mt-1 text-sm text-oar-muted">当前选中运动的数据解剖</p>
             </div>
             {detail && (
