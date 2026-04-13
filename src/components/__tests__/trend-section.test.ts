@@ -48,6 +48,20 @@ vi.mock('../animated-metrics', () => ({
   }) => React.createElement('span', null, isTime ? '02:18:54' : value.toFixed(decimals)),
 }));
 
+vi.mock('lucide-react', () => {
+  function icon(name: string) {
+    return function MockIcon(props: Record<string, unknown>) {
+      return React.createElement('svg', { 'data-icon': name, ...props });
+    };
+  }
+
+  return {
+    ArrowUp: icon('ArrowUp'),
+    ArrowDown: icon('ArrowDown'),
+    Minus: icon('Minus'),
+  };
+});
+
 import { TrendSection } from '../trend-section';
 
 function makeCard(overrides: Partial<TrendCardView> = {}): TrendCardView {
@@ -66,7 +80,7 @@ function makeCard(overrides: Partial<TrendCardView> = {}): TrendCardView {
 }
 
 describe('TrendSection', () => {
-  it('renders inline trend copy and an up-state background arrow for metric cards', () => {
+  it('renders an inline up arrow before positive trend copy for metric cards', () => {
     const markup = renderToStaticMarkup(
       React.createElement(TrendSection, {
         weekCards: [makeCard()],
@@ -79,10 +93,11 @@ describe('TrendSection', () => {
     expect(markup).toContain('+8.2%');
     expect(markup).toContain('vs 上月');
     expect(markup).toContain('data-trend-state="up"');
-    expect(markup).toContain('data-trend-arrow="up"');
+    expect(markup).toContain('data-icon="ArrowUp"');
+    expect(markup).not.toContain('data-trend-arrow=');
   });
 
-  it('renders flat and unavailable states without appending comparison copy', () => {
+  it('renders a neutral minus icon for flat state and no icon for unavailable state', () => {
     const markup = renderToStaticMarkup(
       React.createElement(TrendSection, {
         weekCards: [
@@ -158,6 +173,7 @@ describe('TrendSection', () => {
     expect(markup).toContain('暂无环比');
     expect(markup).toContain('data-trend-state="flat"');
     expect(markup).toContain('data-trend-state="na"');
+    expect(markup).toContain('data-icon="Minus"');
     expect(markup).not.toContain('持平</span><span>vs 上月');
     expect(markup).not.toContain('暂无环比</span><span>vs 上月');
   });

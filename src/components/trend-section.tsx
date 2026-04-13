@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { motion } from 'framer-motion';
+import { ArrowDown, ArrowUp, Minus } from 'lucide-react';
 import { AnimatedNumber } from './animated-metrics';
 import { SectionIntro } from './section-intro';
 import type { TrendCardView } from '../lib/oarboard/calendar-data';
@@ -21,20 +22,12 @@ const filterLabels: Record<FilterMode, string> = {
   year: '本年',
 };
 
-const trendTextClassName: Record<TrendCardView['trendState'], string> = {
-  up: 'text-[rgba(210,225,255,0.86)]',
-  down: 'text-[rgba(220,224,232,0.76)]',
-  flat: 'text-[rgba(210,210,210,0.68)]',
+const trendAccentClassName: Record<TrendCardView['trendState'], string> = {
+  up: 'text-emerald-300/85',
+  down: 'text-rose-300/80',
+  flat: 'text-zinc-400',
   na: 'text-white/55',
-  new: 'text-[rgba(210,225,255,0.78)]',
-};
-
-const trendArrowStrokeByState: Record<TrendCardView['trendState'], string> = {
-  up: 'rgba(140,180,255,0.38)',
-  down: 'rgba(170,180,195,0.34)',
-  flat: 'rgba(150,156,168,0.3)',
-  na: 'rgba(0,0,0,0)',
-  new: 'rgba(140,180,255,0.32)',
+  new: 'text-emerald-300/75',
 };
 
 function shouldShowComparisonLabel(state: TrendCardView['trendState']) {
@@ -101,55 +94,20 @@ function buildTrendTooltip(card: TrendCardView): string | undefined {
   return details.join('\n');
 }
 
-function TrendArrowBackground({ state }: { state: TrendCardView['trendState'] }) {
-  if (state === 'na') {
-    return null;
+function TrendInlineIcon({ state }: { state: TrendCardView['trendState'] }) {
+  const className = `h-3.5 w-3.5 shrink-0 ${trendAccentClassName[state]}`;
+
+  switch (state) {
+    case 'up':
+    case 'new':
+      return <ArrowUp aria-hidden="true" className={className} strokeWidth={2.1} />;
+    case 'down':
+      return <ArrowDown aria-hidden="true" className={className} strokeWidth={2.1} />;
+    case 'flat':
+      return <Minus aria-hidden="true" className={className} strokeWidth={2.1} />;
+    case 'na':
+      return null;
   }
-
-  const stroke = trendArrowStrokeByState[state];
-
-  if (state === 'down') {
-    return (
-      <div
-        aria-hidden="true"
-        data-trend-arrow="down"
-        className="pointer-events-none absolute bottom-3 right-3 h-[34%] w-[44%] opacity-70"
-      >
-        <svg viewBox="0 0 160 88" className="h-full w-full">
-          <path d="M10 20 C58 20 96 22 120 35 C134 43 145 53 150 64" fill="none" stroke={stroke} strokeWidth="2" strokeLinecap="round" />
-          <path d="M141 56 L150 64 L139 67" fill="none" stroke={stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </div>
-    );
-  }
-
-  if (state === 'flat') {
-    return (
-      <div
-        aria-hidden="true"
-        data-trend-arrow="flat"
-        className="pointer-events-none absolute bottom-3 right-3 h-[34%] w-[44%] opacity-60"
-      >
-        <svg viewBox="0 0 160 88" className="h-full w-full">
-          <path d="M10 44 C56 44 102 44 150 44" fill="none" stroke={stroke} strokeWidth="2" strokeLinecap="round" />
-          <path d="M141 39 L150 44 L141 49" fill="none" stroke={stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </div>
-    );
-  }
-
-  return (
-    <div
-      aria-hidden="true"
-      data-trend-arrow={state}
-      className="pointer-events-none absolute bottom-3 right-3 h-[34%] w-[44%] opacity-70"
-    >
-      <svg viewBox="0 0 160 88" className="h-full w-full">
-        <path d="M10 62 C58 62 96 63 118 50 C132 41 143 28 150 16" fill="none" stroke={stroke} strokeWidth="2" strokeLinecap="round" />
-        <path d="M141 16 L150 16 L147 24" fill="none" stroke={stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    </div>
-  );
 }
 
 export function TrendSection({ weekCards, monthCards, yearCards }: TrendSectionProps) {
@@ -185,9 +143,8 @@ export function TrendSection({ weekCards, monthCards, yearCards }: TrendSectionP
         {cards.map((card) => (
           <div
             key={card.id}
-            className="relative overflow-hidden rounded-3xl border border-white/5 bg-zinc-900/40 p-5 lg:min-h-[144px] lg:p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_8px_16px_rgba(0,0,0,0.3)] backdrop-blur-md flex flex-col justify-between min-h-[132px]"
+            className="relative overflow-hidden rounded-3xl border border-white/5 bg-zinc-900/40 p-5 lg:min-h-[132px] lg:p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_8px_16px_rgba(0,0,0,0.3)] backdrop-blur-md flex flex-col justify-between min-h-[124px]"
           >
-            <TrendArrowBackground state={card.trendState} />
             <div className="relative z-10 text-[0.72rem] tracking-[0.08em] text-zinc-500 font-medium">{card.label}</div>
             
             <motion.div
@@ -218,11 +175,12 @@ export function TrendSection({ weekCards, monthCards, yearCards }: TrendSectionP
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.18, ease: 'easeOut', delay: 0.05 }}
-                className="mt-2 flex items-center gap-1.5 text-[12px] font-medium tracking-[0.01em]"
+                className="mt-2 flex items-center gap-1 text-[12px] font-medium tracking-[0.01em]"
               >
-                <span className={trendTextClassName[card.trendState]}>{card.trendDisplay}</span>
+                <TrendInlineIcon state={card.trendState} />
+                <span className={trendAccentClassName[card.trendState]}>{card.trendDisplay}</span>
                 {shouldShowComparisonLabel(card.trendState) && card.comparisonLabel ? (
-                  <span className="text-white/42">{card.comparisonLabel}</span>
+                  <span className="ml-0.5 text-white/42">{card.comparisonLabel}</span>
                 ) : null}
               </motion.div>
             </motion.div>
