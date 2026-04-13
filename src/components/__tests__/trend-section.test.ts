@@ -80,20 +80,63 @@ function makeCard(overrides: Partial<TrendCardView> = {}): TrendCardView {
 }
 
 describe('TrendSection', () => {
-  it('renders an inline up arrow before positive trend copy for metric cards', () => {
+  it('renders subdued red-up and green-down inline arrows before trend copy', () => {
     const markup = renderToStaticMarkup(
       React.createElement(TrendSection, {
-        weekCards: [makeCard()],
-        monthCards: [makeCard()],
-        yearCards: [makeCard()],
+        weekCards: [
+          makeCard(),
+          makeCard({
+            id: 'calorie',
+            label: '周期热量',
+            value: '1200 kcal',
+            rawValue: 1200,
+            trendDisplay: '-4.3%',
+            trendState: 'down',
+            previousRawValue: 1254,
+            changePercent: -4.3,
+          }),
+        ],
+        monthCards: [
+          makeCard(),
+          makeCard({
+            id: 'calorie',
+            label: '周期热量',
+            value: '1200 kcal',
+            rawValue: 1200,
+            trendDisplay: '-4.3%',
+            trendState: 'down',
+            previousRawValue: 1254,
+            changePercent: -4.3,
+          }),
+        ],
+        yearCards: [
+          makeCard(),
+          makeCard({
+            id: 'calorie',
+            label: '周期热量',
+            value: '1200 kcal',
+            rawValue: 1200,
+            trendDisplay: '-4.3%',
+            trendState: 'down',
+            previousRawValue: 1254,
+            changePercent: -4.3,
+          }),
+        ],
       }),
     );
 
     expect(markup).toContain('周期距离');
     expect(markup).toContain('+8.2%');
+    expect(markup).toContain('-4.3%');
     expect(markup).toContain('vs 上月');
     expect(markup).toContain('data-trend-state="up"');
+    expect(markup).toContain('data-trend-state="down"');
     expect(markup).toContain('data-icon="ArrowUp"');
+    expect(markup).toContain('data-icon="ArrowDown"');
+    expect(markup).toContain('text-rose-300/65');
+    expect(markup).toContain('text-emerald-300/70');
+    expect(markup).toContain('text-[11px]');
+    expect(markup).toContain('font-normal');
     expect(markup).not.toContain('data-trend-arrow=');
   });
 

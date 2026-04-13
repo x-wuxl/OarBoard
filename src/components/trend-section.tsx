@@ -23,11 +23,11 @@ const filterLabels: Record<FilterMode, string> = {
 };
 
 const trendAccentClassName: Record<TrendCardView['trendState'], string> = {
-  up: 'text-emerald-300/85',
-  down: 'text-rose-300/80',
-  flat: 'text-zinc-400',
+  up: 'text-rose-300/65',
+  down: 'text-emerald-300/70',
+  flat: 'text-zinc-400/85',
   na: 'text-white/55',
-  new: 'text-emerald-300/75',
+  new: 'text-rose-300/60',
 };
 
 function shouldShowComparisonLabel(state: TrendCardView['trendState']) {
@@ -95,16 +95,16 @@ function buildTrendTooltip(card: TrendCardView): string | undefined {
 }
 
 function TrendInlineIcon({ state }: { state: TrendCardView['trendState'] }) {
-  const className = `h-3.5 w-3.5 shrink-0 ${trendAccentClassName[state]}`;
+  const className = `h-3 w-3 shrink-0 ${trendAccentClassName[state]}`;
 
   switch (state) {
     case 'up':
     case 'new':
-      return <ArrowUp aria-hidden="true" className={className} strokeWidth={2.1} />;
+      return <ArrowUp aria-hidden="true" className={className} strokeWidth={1.9} />;
     case 'down':
-      return <ArrowDown aria-hidden="true" className={className} strokeWidth={2.1} />;
+      return <ArrowDown aria-hidden="true" className={className} strokeWidth={1.9} />;
     case 'flat':
-      return <Minus aria-hidden="true" className={className} strokeWidth={2.1} />;
+      return <Minus aria-hidden="true" className={className} strokeWidth={1.9} />;
     case 'na':
       return null;
   }
@@ -175,7 +175,7 @@ export function TrendSection({ weekCards, monthCards, yearCards }: TrendSectionP
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.18, ease: 'easeOut', delay: 0.05 }}
-                className="mt-2 flex items-center gap-1 text-[12px] font-medium tracking-[0.01em]"
+                className="mt-2 flex items-center gap-0.5 text-[11px] font-normal tracking-[0.01em]"
               >
                 <TrendInlineIcon state={card.trendState} />
                 <span className={trendAccentClassName[card.trendState]}>{card.trendDisplay}</span>

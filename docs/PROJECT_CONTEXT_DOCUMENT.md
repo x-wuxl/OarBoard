@@ -77,6 +77,16 @@
   - 累计卡片 + 热力图 / Fitness 状态面板。
 - `trend-section.tsx`
   - 本周 / 本月 / 本年切换区。
+  - 当前 4 张指标卡支持环比展示：
+    - 当前值
+    - 环比百分比
+    - `vs 上周 / 上月 / 上年`
+    - inline 趋势箭头图标
+  - 当前趋势表现已从背景装饰型 SVG 箭头，收敛为更克制的 `lucide-react` inline 图标：
+    - 上涨：红色 `ArrowUp`
+    - 下跌：绿色 `ArrowDown`
+    - 持平：中性 `Minus`
+    - `暂无环比` 不显示图标
 - `dashboard-section.tsx`
   - 历史列表、微观细节和里程碑时间线。
 - `animated-metrics.tsx`
@@ -98,6 +108,11 @@
   - `poster-data.ts`
   - `dashboard-data.ts`
   - `calendar-data.ts`
+    - 现在不仅负责 heatmap / trend cards 的基础数据，还负责阶段卡片的环比状态建模：
+      - `up / down / flat / na / new`
+      - 百分比文案
+      - 上一周期原始值
+      - tooltip 所需比较信息
   - `rings.ts`
   - `time-machine-data.ts`
   - `milestones-data.ts`
@@ -149,6 +164,31 @@
 - 三个主模块的顶部外边距已统一收口。
 - `PosterHero` 底部 padding 也做了收缩，避免 Hero 与 `MacroOverviewSection` 之间空白过大。
 
+### 4.5 阶段聚焦（TrendSection）当前逻辑
+- 支持 `本周 / 本月 / 本年` 三种周期切换。
+- 每个周期输出 4 张指标卡：
+  - 训练次数
+  - 周期距离
+  - 周期时长
+  - 周期热量
+- 每张卡片当前包含：
+  - 指标标题
+  - 主数值
+  - 一行环比信息
+- 环比信息的当前规则：
+  - 默认只显示百分比，不默认显示绝对变化量
+  - 周期映射为：
+    - `本周 -> vs 上周`
+    - `本月 -> vs 上月`
+    - `本年 -> vs 上年`
+  - 状态包括：
+    - `up`
+    - `down`
+    - `flat`
+    - `na`
+    - `new`
+- 视觉上当前采用 inline 图标而非背景趋势纹理，以保证小尺寸下的可读性与克制感。
+
 ---
 
 ## 5. 数据流与缓存
@@ -176,6 +216,13 @@
   - 累计 totals
   - 本月 / 本年趋势
   - 里程碑分析
+- 当前 `TrendSection` 所需的上一周期对比数据也在 `app/page.tsx` 中直接组装：
+  - 当前周 vs 上周
+  - 当前月 vs 上月
+  - 当前年 vs 上年
+- 对比逻辑保持在服务端页面层与纯函数分析层之间分工：
+  - `app/page.tsx` 负责切周期、取当前 / 上一周期 summary
+  - `calendar-data.ts` 负责把 summary 转成 UI 需要的趋势状态
 
 ### 5.3 这次修复的根因
 - 之前首页出现过“页面知道今天有训练，但顶部 Rings 还是 0%”的问题。
@@ -231,6 +278,9 @@
   - rings
   - time machine
   - today-data
+- `src/components/__tests__/`
+  - dashboard-section
+  - trend-section
 
 ### 7.2 本轮新增测试点
 - `today-data.test.ts`
@@ -240,6 +290,18 @@
 - `milestones-data.test.ts`
   - 验证 `monthly-20`
   - 验证 `single-5` 与 `monthly-20` 的未达成预览
+- `calendar-data.test.ts`
+  - 验证阶段卡片环比状态：
+    - 正向百分比
+    - 近似持平
+    - 缺少上一周期
+    - 上一周期为 0 时的 `新增`
+- `trend-section.test.ts`
+  - 验证趋势卡片渲染：
+    - inline 上下 / 持平图标
+    - `vs 上周 / 上月 / 上年`
+    - 不再使用背景 SVG 趋势箭头
+    - 当前配色语义为“上涨红、下跌绿”
 
 ### 7.3 验证说明
 - `npm run typecheck` 是当前最稳定的校验命令。
@@ -276,4 +338,8 @@
   - `todayRecords`
   - 缓存 totals
   - 月 / 年趋势汇总
-
+- 修改 `TrendSection` 或 `calendar-data.ts` 时，需要同时核对：
+  - 当前周期与上一周期 summary 是否同步
+  - `trendState` 与 `trendDisplay` 是否一致
+  - inline 图标颜色语义（当前约定：上涨红、下跌绿）
+  - `trend-section.test.ts` 与 `calendar-data.test.ts`
