@@ -19,7 +19,19 @@ export interface TrendCardView {
   label: string;
   value: string;
   rawValue: number;
+  comparisonLabel: string | null;
+  trendDisplay: string;
+  trendState: 'up' | 'down' | 'flat' | 'na' | 'new';
+  previousRawValue: number | null;
+  changePercent: number | null;
 }
+
+interface TrendCardOptions {
+  previousTotals?: MokeWorkoutTotals | null;
+  comparisonLabel?: string | null;
+}
+
+const FLAT_THRESHOLD_PERCENT = 0.5;
 
 function getLevel(distance: number): 0 | 1 | 2 | 3 | 4 | 5 {
   if (distance <= 0) return 0;
@@ -70,13 +82,93 @@ export function groupHeatmapIntoWeeks(entries: HeatmapCellView[]): HeatmapWeekCo
   return weeks;
 }
 
-export function buildTrendCards(totals: MokeWorkoutTotals): TrendCardView[] {
-  return [
+function getTrendMetricValue(id: TrendCardView['id'], totals: MokeWorkoutTotals): number {
+  switch (id) {
+    case 'sessions':
+      return totals.sportCount ?? 0;
+    case 'distance':
+      return totals.totalDistance;
+    case 'duration':
+      return totals.totalDuration;
+    case 'calorie':
+      return totals.totalCalorie;
+  }
+}
+
+function formatTrendPercent(percent: number): string {
+  const rounded = Math.abs(percent).toFixed(1);
+  return `${percent >= 0 ? '+' : '-'}${rounded}%`;
+}
+
+function buildTrendMeta(currentRawValue: number, previousRawValue: number | null, comparisonLabel: string | null) {
+  if (previousRawValue === null) {
+    return {
+      comparisonLabel,
+      trendDisplay: '暂无环比',
+      trendState: 'na' as const,
+      previousRawValue,
+      changePercent: null,
+    };
+  }
+
+  if (previousRawValue === 0) {
+    if (currentRawValue > 0) {
+      return {
+        comparisonLabel,
+        trendDisplay: '新增',
+        trendState: 'new' as const,
+        previousRawValue,
+        changePercent: null,
+      };
+    }
+
+    return {
+      comparisonLabel,
+      trendDisplay: '持平',
+      trendState: 'flat' as const,
+      previousRawValue,
+      changePercent: 0,
+    };
+  }
+
+  const changePercent = ((currentRawValue - previousRawValue) / previousRawValue) * 100;
+
+  if (Math.abs(changePercent) < FLAT_THRESHOLD_PERCENT) {
+    return {
+      comparisonLabel,
+      trendDisplay: '持平',
+      trendState: 'flat' as const,
+      previousRawValue,
+      changePercent,
+    };
+  }
+
+  return {
+    comparisonLabel,
+    trendDisplay: formatTrendPercent(changePercent),
+    trendState: changePercent > 0 ? 'up' as const : 'down' as const,
+    previousRawValue,
+    changePercent,
+  };
+}
+
+export function buildTrendCards(totals: MokeWorkoutTotals, options: TrendCardOptions = {}): TrendCardView[] {
+  const { previousTotals = null, comparisonLabel = null } = options;
+  const baseCards: Array<Pick<TrendCardView, 'id' | 'label' | 'value' | 'rawValue'>> = [
     { id: 'sessions', label: '训练次数', value: String(totals.sportCount ?? 0), rawValue: totals.sportCount ?? 0 },
     { id: 'distance', label: '周期距离', value: formatDistanceKm(totals.totalDistance * 1000), rawValue: totals.totalDistance },
     { id: 'duration', label: '周期时长', value: formatDuration(totals.totalDuration), rawValue: totals.totalDuration },
     { id: 'calorie', label: '周期热量', value: `${Math.round(totals.totalCalorie)} kcal`, rawValue: totals.totalCalorie },
   ];
+
+  return baseCards.map((card) => ({
+    ...card,
+    ...buildTrendMeta(
+      card.rawValue,
+      previousTotals ? getTrendMetricValue(card.id, previousTotals) : null,
+      comparisonLabel,
+    ),
+  }));
 }
 
 function padDateStr(d: Date): string {

@@ -91,6 +91,8 @@ export default async function HomePage() {
 
   const today = getToday();
   const currentMonth = getCurrentMonth();
+  const currentDate = new Date();
+  const currentYear = String(currentDate.getFullYear());
 
   let authError: string | null = null;
 
@@ -194,17 +196,26 @@ export default async function HomePage() {
   }
 
   const heatmap = buildCalendarHeatmap(heatmapArtifact ? toHeatmapEntries(heatmapArtifact) : []);
-  const currentMonthSummary = summarizeWorkoutTotals(
-    recordsForAnalysis.filter((record) => record.month === currentMonth),
-  );
-  const currentYearSummary = summarizeWorkoutTotals(
-    recordsForAnalysis.filter((record) => record.year === String(new Date().getFullYear())),
-  );
-
   const { start: weekStart, end: weekEnd } = getWeekRange();
-  const thisWeekRecords = historyRecords.filter((r) => r.day >= weekStart && r.day <= weekEnd);
-  
-  const currentWeekSummary = thisWeekRecords.reduce(
+  const currentWeekStartDate = new Date(`${weekStart}T00:00:00`);
+  const previousWeekStartDate = new Date(currentWeekStartDate);
+  previousWeekStartDate.setDate(currentWeekStartDate.getDate() - 7);
+  const previousWeekEndDate = new Date(currentWeekStartDate);
+  previousWeekEndDate.setDate(currentWeekStartDate.getDate() - 1);
+  const previousMonthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
+  const previousMonth = `${previousMonthDate.getFullYear()}-${String(previousMonthDate.getMonth() + 1).padStart(2, '0')}`;
+  const previousYear = String(currentDate.getFullYear() - 1);
+
+  const currentWeekRecords = recordsForAnalysis.filter((record) => record.day >= weekStart && record.day <= weekEnd);
+  const previousWeekRecords = recordsForAnalysis.filter(
+    (record) => record.day >= fmtDate(previousWeekStartDate) && record.day <= fmtDate(previousWeekEndDate),
+  );
+  const currentMonthRecords = recordsForAnalysis.filter((record) => record.month === currentMonth);
+  const previousMonthRecords = recordsForAnalysis.filter((record) => record.month === previousMonth);
+  const currentYearRecords = recordsForAnalysis.filter((record) => record.year === currentYear);
+  const previousYearRecords = recordsForAnalysis.filter((record) => record.year === previousYear);
+
+  const currentWeekSummary = currentWeekRecords.reduce(
     (acc, record) => {
       acc.totalDistance += record.sumMileage;
       acc.totalCalorie += record.sumCalorie;
@@ -214,10 +225,26 @@ export default async function HomePage() {
     },
     { totalDistance: 0, totalCalorie: 0, totalDuration: 0, sportCount: 0 }
   );
+  const previousWeekSummary = previousWeekRecords.length > 0
+    ? previousWeekRecords.reduce(
+      (acc, record) => {
+        acc.totalDistance += record.sumMileage;
+        acc.totalCalorie += record.sumCalorie;
+        acc.totalDuration += record.sumDuration;
+        acc.sportCount += 1;
+        return acc;
+      },
+      { totalDistance: 0, totalCalorie: 0, totalDuration: 0, sportCount: 0 },
+    )
+    : null;
+  const currentMonthSummary = summarizeWorkoutTotals(currentMonthRecords);
+  const previousMonthSummary = previousMonthRecords.length > 0 ? summarizeWorkoutTotals(previousMonthRecords) : null;
+  const currentYearSummary = summarizeWorkoutTotals(currentYearRecords);
+  const previousYearSummary = previousYearRecords.length > 0 ? summarizeWorkoutTotals(previousYearRecords) : null;
 
-  const weekCards = buildTrendCards(currentWeekSummary);
-  const monthCards = buildTrendCards(currentMonthSummary);
-  const yearCards = buildTrendCards(currentYearSummary);
+  const weekCards = buildTrendCards(currentWeekSummary, { previousTotals: previousWeekSummary, comparisonLabel: 'vs 上周' });
+  const monthCards = buildTrendCards(currentMonthSummary, { previousTotals: previousMonthSummary, comparisonLabel: 'vs 上月' });
+  const yearCards = buildTrendCards(currentYearSummary, { previousTotals: previousYearSummary, comparisonLabel: 'vs 上年' });
 
   const lifetimeRaw = {
     totalDurationRaw: effectiveSummaryTotals.totalDuration,
