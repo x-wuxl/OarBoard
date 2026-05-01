@@ -1,4 +1,4 @@
-import { createMokeClient, type MokeClientOptions } from './client';
+import { MokeApiError, createMokeClient, type MokeClientOptions } from './client';
 import {
   formatDistanceKm,
   formatDuration,
@@ -24,6 +24,18 @@ import type {
 
 function formatHistoryLabel(raw: string): string {
   return raw.replace('/', ' to ');
+}
+
+function hasWorkoutTotalsData(value: unknown): value is MokeWorkoutTotalsResponse['data'] {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  return typeof candidate.totalDistance === 'number'
+    && typeof candidate.totalCalorie === 'number'
+    && typeof candidate.totalDuration === 'number'
+    && (candidate.sportCount === undefined || typeof candidate.sportCount === 'number');
 }
 
 export function toWorkoutHistoryItems(response: MokeWorkoutHistoryResponse): WorkoutHistoryItemView[] {
@@ -121,12 +133,18 @@ export async function fetchWorkoutDetail(sportId: string, options?: MokeClientOp
 
 export async function fetchWorkoutTotals(query: WorkoutTotalsQuery, options?: MokeClientOptions): Promise<MokeWorkoutTotalsResponse> {
   const client = createMokeClient(options);
-  return client.get('/obtainUserSporTotalByType', {
+  const response = await client.get<MokeWorkoutTotalsResponse>('/obtainUserSporTotalByType', {
     accountId: query.accountId,
     type: query.type,
     deviceType: query.deviceType ?? 2,
     condition: query.condition,
   });
+
+  if (!hasWorkoutTotalsData(response.data)) {
+    throw new MokeApiError('Moke totals response is missing required data fields', 502, response, 'upstream');
+  }
+
+  return response;
 }
 
 export async function fetchHomePageData(accountId: string, deviceType = 2, options?: MokeClientOptions): Promise<MokeHomePageResponse> {

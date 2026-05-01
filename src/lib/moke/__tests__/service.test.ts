@@ -1,7 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   buildDetailMetrics,
+  fetchWorkoutTotals,
   flattenWorkoutGroups,
   toDetailChartPoints,
   toWorkoutHistoryItems,
@@ -185,6 +186,31 @@ describe('buildDetailMetrics', () => {
       averageRpm: 30.33,
       averagePace: '02:21/500m',
       totalTurns: 409,
+    });
+  });
+});
+
+describe('fetchWorkoutTotals', () => {
+  it('rejects business-error payloads such as expired oauth tokens even when the HTTP status is 200', async () => {
+    const fetchImpl: typeof fetch = vi.fn(async () => new Response(JSON.stringify({
+      code: '606',
+      msg: 'oauthtoken error',
+      obj: 'error',
+    }), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    }));
+
+    await expect(fetchWorkoutTotals({
+      accountId: 'user-1',
+      type: 1,
+      condition: '2026-05-01',
+    }, {
+      fetchImpl,
+    })).rejects.toMatchObject({
+      name: 'MokeApiError',
+      code: 'unauthorized',
+      status: 401,
     });
   });
 });

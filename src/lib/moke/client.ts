@@ -9,6 +9,43 @@ export interface MokeClientOptions {
   fetchImpl?: typeof fetch;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function getBusinessError(payload: unknown): MokeApiError | null {
+  if (!isRecord(payload) || !('code' in payload)) {
+    return null;
+  }
+
+  const rawCode = payload.code;
+  if (rawCode === 200 || rawCode === '200') {
+    return null;
+  }
+
+  const rawMessage = typeof payload.msg === 'string'
+    ? payload.msg
+    : typeof payload.message === 'string'
+      ? payload.message
+      : null;
+  const codeText = String(rawCode);
+  const normalizedMessage = rawMessage?.toLowerCase() ?? '';
+  const isUnauthorized = rawCode === 401
+    || rawCode === '401'
+    || rawCode === 403
+    || rawCode === '403'
+    || normalizedMessage.includes('oauthtoken')
+    || normalizedMessage.includes('token')
+    || normalizedMessage.includes('auth');
+
+  return new MokeApiError(
+    rawMessage ? `Moke API returned code ${codeText}: ${rawMessage}` : `Moke API returned code ${codeText}`,
+    isUnauthorized ? 401 : 502,
+    payload,
+    isUnauthorized ? 'unauthorized' : 'upstream',
+  );
+}
+
 export class MokeApiError extends Error {
   constructor(
     message: string,
@@ -57,6 +94,11 @@ export class MokeClient {
       });
 
       const payload = await response.json().catch(() => null);
+      const businessError = getBusinessError(payload);
+
+      if (businessError) {
+        throw businessError;
+      }
 
       if (!response.ok) {
         throw new MokeApiError(

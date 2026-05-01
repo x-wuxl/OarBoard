@@ -12,6 +12,7 @@ import {
   toRecentHistoryRecords,
 } from '../src/lib/moke/cache-service';
 import { formatDistanceKm, formatDuration } from '../src/lib/moke/formatters';
+import { getMokeErrorMessage, getWorkoutTotalsSportCount } from '../src/lib/moke/response-utils';
 import { buildCalendarHeatmap, buildTrendCards } from '../src/lib/oarboard/calendar-data';
 import { buildDashboardData, buildWorkoutDetailPanel } from '../src/lib/oarboard/dashboard-data';
 import { buildDnaMap } from '../src/lib/oarboard/dna-data';
@@ -114,8 +115,7 @@ export default async function HomePage() {
       summary = cached.summary;
       heatmapArtifact = cached.heatmap;
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      authError = message.includes('401') ? 'MOKE_AUTHORIZATION may be expired. Update your token in the environment variables.' : message;
+      authError = getMokeErrorMessage(error);
     }
   }
 
@@ -132,22 +132,20 @@ export default async function HomePage() {
       todayTotals = await getTodayTotalsFromUpstream({ accountId, authorization, baseUrl, today });
     } catch (error) {
       if (!authError) {
-        const message = error instanceof Error ? error.message : String(error);
-        authError = message.includes('401') ? 'MOKE_AUTHORIZATION may be expired. Update your token in the environment variables.' : message;
+        authError = getMokeErrorMessage(error);
       }
     }
   }
 
   let liveTodayRecords: MokeWorkoutRecord[] = [];
-  const expectedTodaySessions = todayTotals.data.sportCount ?? 0;
+  const expectedTodaySessions = getWorkoutTotalsSportCount(todayTotals);
 
   if (accountId && expectedTodaySessions > cachedTodayRecords.length) {
     try {
       liveTodayRecords = await getTodayRecordsFromUpstream({ accountId, authorization, baseUrl, today });
     } catch (error) {
       if (!authError) {
-        const message = error instanceof Error ? error.message : String(error);
-        authError = message.includes('401') ? 'MOKE_AUTHORIZATION may be expired. Update your token in the environment variables.' : message;
+        authError = getMokeErrorMessage(error);
       }
     }
   }
